@@ -358,6 +358,63 @@ const Reports = () => {
             </div>
             </div>
         );
+
+        case 'customers':
+    return (
+      <div className="bg-dark-400 rounded-lg overflow-hidden">
+        <div className="p-4 flex justify-between items-center">
+          <h2 className="text-lg font-medium">Customers Report</h2>
+          <div className="flex space-x-2">
+            <button
+              onClick={handleExportPDF}
+              className="px-3 py-1 bg-primary text-white rounded-md"
+            >
+              Export PDF
+            </button>
+            <button
+              onClick={handleExportExcel}
+              className="px-3 py-1 bg-primary text-white rounded-md"
+            >
+              Export Excel
+            </button>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-dark-200">
+            <thead className="bg-dark-300">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-primary uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-primary uppercase tracking-wider">Phone</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-primary uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-primary uppercase tracking-wider">Total Purchases</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-primary uppercase tracking-wider">Last Purchase</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-dark-200">
+              {customersData.map((customer, index) => (
+                <tr key={customer._id} className={index % 2 === 0 ? 'bg-dark-400' : 'bg-dark-500'}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    {customer.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    {customer.phone}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    {customer.email || 'N/A'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    ${customer.totalPurchases ? customer.totalPurchases.toFixed(2) : '0.00'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    {customer.lastPurchaseDate ? new Date(customer.lastPurchaseDate).toLocaleDateString() : 'Never'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
       default:
         return <div>Select a report type</div>;
     }

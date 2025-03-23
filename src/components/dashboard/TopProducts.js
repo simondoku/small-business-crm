@@ -6,10 +6,7 @@ import Tooltip from '../common/Tooltip';
 const TopProducts = ({ products = [] }) => {
   // If no products provided, use sample data
   const displayProducts = products.length > 0 ? products : [
-    { name: 'Product A', count: 32 },
-    { name: 'Product B', count: 24 },
-    { name: 'Product C', count: 18 },
-    { name: 'Product D', count: 12 }
+    { name: 'Sample Product', count: 0 },
   ];
   
   // Find the max count for percentage calculation
