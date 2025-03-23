@@ -1,4 +1,4 @@
-// src/pages/NewSale.js (updated)
+// src/pages/NewSale.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
@@ -11,6 +11,7 @@ const NewSale = () => {
   const navigate = useNavigate();
   const [saleItems, setSaleItems] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [comments, setComments] = useState('');
   const [products, setProducts] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,12 +25,10 @@ const NewSale = () => {
         
         // Fetch products
         const productsData = await getProducts();
-        console.log('Fetched products:', productsData);
         setProducts(productsData);
         
         // Fetch customers
         const customersData = await getCustomers();
-        console.log('Fetched customers:', customersData);
         setCustomers(customersData);
         
         setLoading(false);
@@ -44,7 +43,6 @@ const NewSale = () => {
   }, []);
   
   const handleSelectProduct = (product) => {
-    console.log('Selected product:', product);
     // Check if product is already in the sale
     const existingItem = saleItems.find(item => item._id === product._id);
     
@@ -92,6 +90,10 @@ const NewSale = () => {
     }
   };
   
+  const handleCommentsChange = (newComments) => {
+    setComments(newComments);
+  };
+  
   const handleCompleteSale = async () => {
     if (!selectedCustomer || !selectedCustomer._id) {
       alert('Please select a customer to complete the sale');
@@ -110,7 +112,8 @@ const NewSale = () => {
         items: saleItems.map(item => ({
           productId: item._id,
           quantity: item.quantity
-        }))
+        })),
+        comments: comments
       };
       
       console.log('Submitting sale:', saleData);
@@ -122,6 +125,7 @@ const NewSale = () => {
       // Reset form
       setSaleItems([]);
       setSelectedCustomer(null);
+      setComments('');
       
       // Show success message and navigate to dashboard
       alert('Sale completed successfully!');
@@ -149,11 +153,13 @@ const NewSale = () => {
           customers={customers}
           saleItems={saleItems}
           selectedCustomer={selectedCustomer}
+          comments={comments}
           onSelectProduct={handleSelectProduct}
           onUpdateQuantity={handleUpdateQuantity}
           onRemoveItem={handleRemoveItem}
           onSelectCustomer={setSelectedCustomer}
           onNewCustomer={handleNewCustomer}
+          onCommentsChange={handleCommentsChange}
           onCompleteSale={handleCompleteSale}
           loading={loading}
           error={error}

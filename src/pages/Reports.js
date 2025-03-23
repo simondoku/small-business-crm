@@ -171,31 +171,35 @@ const Reports = () => {
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-dark-200">
                 <thead className="bg-dark-300">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-primary uppercase tracking-wider">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-primary uppercase tracking-wider">Customer</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-primary uppercase tracking-wider">Items</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-primary uppercase tracking-wider">Total</th>
-                  </tr>
+                <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-primary uppercase tracking-wider">DATE</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-primary uppercase tracking-wider">CUSTOMER</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-primary uppercase tracking-wider">ITEMS</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-primary uppercase tracking-wider">TOTAL</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-primary uppercase tracking-wider">COMMENTS</th>
+                </tr>
                 </thead>
-                <tbody className="divide-y divide-dark-200">
-                  {salesData.map((sale, index) => (
-                    <tr key={sale._id} className={index % 2 === 0 ? 'bg-dark-400' : 'bg-dark-500'}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                        {new Date(sale.createdAt).toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                        {sale.customer?.name || 'Unknown'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                        {sale.items.length}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                        ${sale.totalAmount.toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+            <tbody className="divide-y divide-dark-200">
+            {salesData.map((sale, index) => (
+                <tr key={sale._id} className={index % 2 === 0 ? 'bg-dark-400' : 'bg-dark-500'}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    {new Date(sale.createdAt).toLocaleString()}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    {sale.customer?.name || 'Unknown'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    {sale.items.length}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                    ${sale.totalAmount.toFixed(2)}
+                </td>
+                <td className="px-6 py-4 text-sm text-white">
+                    {sale.comments || '-'}
+                </td>
+                </tr>
+            ))}
+            </tbody>
               </table>
             </div>
           </div>

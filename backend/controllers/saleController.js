@@ -41,7 +41,7 @@ const createSale = async (req, res) => {
   try {
     console.log('Sale creation request body:', req.body);
     
-    const { customerId, items } = req.body;
+    const { customerId, items, comments } = req.body;
     
     // Basic validation
     if (!customerId) {
@@ -89,6 +89,7 @@ const createSale = async (req, res) => {
       customer: customer._id,
       items: saleItems,
       totalAmount,
+      comments
     });
     
     // Save to database

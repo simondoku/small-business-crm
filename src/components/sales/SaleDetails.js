@@ -11,7 +11,9 @@ const SaleDetails = ({
   customer,
   onSelectCustomer,
   onNewCustomer,
-  customers = []
+  customers = [],
+  comments = '',
+  onCommentsChange
 }) => {
   const [newCustomer, setNewCustomer] = useState({
     name: '',
@@ -216,8 +218,18 @@ const SaleDetails = ({
             )}
           </>
         )}
-      </div>
-      
+    </div>
+        <div className="p-4 border-t border-dark-300">
+        <h3 className="text-sm text-primary uppercase font-medium mb-3">SALE COMMENTS</h3>
+        <textarea
+          placeholder="Add comments about this sale (optional)"
+          className="w-full p-2 rounded-md bg-dark-300 text-white focus:outline-none focus:ring-1 focus:ring-primary"
+          rows="3"
+          value={comments}
+          onChange={(e) => onCommentsChange(e.target.value)}
+        ></textarea>
+    </div>
+    
       {/* Complete Sale Button */}
       <div className="p-4 border-t border-dark-300">
         <button
