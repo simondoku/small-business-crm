@@ -322,8 +322,6 @@ const Dashboard = () => {
             getProducts()
           ]);
           
-          // Process data...
-          // (the rest of your fetchDashboardData function)
         } catch (err) {
           console.error('Error fetching dashboard data:', err);
           setError('Failed to load dashboard data. Please try again.');

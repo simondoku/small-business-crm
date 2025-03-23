@@ -6,11 +6,7 @@ import Tooltip from '../common/Tooltip';
 const RecentSales = ({ sales = [] }) => {
   // If no sales provided, use sample data
   const displaySales = sales.length > 0 ? sales : [
-    { customer: 'John Smith', product: 'Product A', amount: 59.99, time: '10:24', date: '03/12/2025' },
-    { customer: 'Mary Johnson', product: 'Product C', amount: 45.50, time: '11:15', date: '03/12/2025' },
-    { customer: 'David Miller', product: 'Product B', amount: 34.99, time: '12:03', date: '03/12/2025' },
-    { customer: 'Sarah Brown', product: 'Product A', amount: 59.99, time: '13:42', date: '03/12/2025' },
-    { customer: 'Kevin Lee', product: 'Product D', amount: 22.75, time: '14:17', date: '03/12/2025' }
+    { customer: 'Sample Customer', product: 'Sample Product', amount: 0, time: '00:00', date: '00/00/0000' },
   ];
   
   // Tooltip content
