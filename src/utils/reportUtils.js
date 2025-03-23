@@ -1,10 +1,12 @@
 // src/utils/reportUtils.js
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+// Import jsPDF and xlsx
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
 // Export data as PDF
 export const exportToPDF = (title, headers, data, filename = 'report.pdf') => {
+  // Create a new jsPDF instance
   const doc = new jsPDF();
   
   // Add title
@@ -15,8 +17,8 @@ export const exportToPDF = (title, headers, data, filename = 'report.pdf') => {
   doc.setFontSize(10);
   doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 30);
   
-  // Create table
-  doc.autoTable({
+  // Use the autoTable function directly
+  autoTable(doc, {
     head: [headers],
     body: data,
     startY: 35,
