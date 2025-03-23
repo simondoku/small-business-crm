@@ -105,9 +105,60 @@ const createSale = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+// Add this new function to your saleController.js
+// Get monthly sales data (add this before the module.exports)
+const getMonthlySales = async (req, res) => {
+  try {
+    const year = req.query.year || new Date().getFullYear();
+    
+    // Aggregate monthly sales
+    const monthlySales = await Sale.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`)
+          }
+        }
+      },
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          revenue: { $sum: "$totalAmount" }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          month: "$_id",
+          revenue: 1
+        }
+      },
+      { $sort: { month: 1 } }
+    ]);
+    
+    // Convert month numbers to names
+    const monthNames = [
+      'January', 'February', 'March', 'April', 
+      'May', 'June', 'July', 'August',
+      'September', 'October', 'November', 'December'
+    ];
+    
+    const formattedResults = monthlySales.map(item => ({
+      month: monthNames[item.month - 1],
+      revenue: item.revenue
+    }));
+    
+    res.json(formattedResults);
+  } catch (error) {
+    console.error('Error fetching monthly sales:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
 
 module.exports = {
   getSales,
   getSaleById,
   createSale,
+  getMonthlySales
 };

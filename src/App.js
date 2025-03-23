@@ -9,6 +9,7 @@ import NewSale from './pages/NewSale';
 import Customers from './pages/Customers';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Reports from './pages/Reports';
 
 function App() {
   return (
@@ -48,6 +49,11 @@ function App() {
               <Register />
             </PrivateRoute>
           } />
+          <Route path="/reports" element={
+            <PrivateRoute>
+              <Reports />
+            </PrivateRoute>
+            } />
 
           {/* Catch-all route */}
           <Route path="*" element={<Navigate to="/" />} />

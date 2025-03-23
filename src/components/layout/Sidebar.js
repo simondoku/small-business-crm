@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { HomeIcon, ShoppingCartIcon, CubeIcon, UsersIcon } from '@heroicons/react/outline';
+import { HomeIcon, ShoppingCartIcon, CubeIcon, UsersIcon, ChartBarIcon } from '@heroicons/react/outline';
 
 const Sidebar = () => {
   return (
@@ -38,6 +38,15 @@ const Sidebar = () => {
           }`
         }>
           <UsersIcon className="w-6 h-6" />
+        </NavLink>
+        
+        {/* Add Reports NavLink */}
+        <NavLink to="/reports" className={({ isActive }) => 
+          `w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+            isActive ? 'bg-primary text-white' : 'text-gray-400 hover:text-white hover:bg-dark-100'
+          }`
+        }>
+          <ChartBarIcon className="w-6 h-6" />
         </NavLink>
       </nav>
     </div>
