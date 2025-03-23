@@ -1,9 +1,9 @@
 // src/components/layout/Header.js
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { PlusIcon, UserIcon, LogoutIcon } from '@heroicons/react/solid';
+import { PlusIcon, UserIcon, LogoutIcon, RefreshIcon } from '@heroicons/react/solid';
 
-const Header = ({ title, onAddNew, user, onLogout }) => {
+const Header = ({ title, onAddNew, user, onLogout, onReset }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   return (
@@ -47,6 +47,21 @@ const Header = ({ title, onAddNew, user, onLogout }) => {
                   >
                     Register New User
                   </Link>
+                )}
+
+                {user?.role === 'admin' && title === 'Dashboard' && onReset && (
+                  <button
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      onReset();
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-dark-200"
+                  >
+                    <div className="flex items-center">
+                      <RefreshIcon className="h-4 w-4 mr-2" />
+                      <span>Reset Dashboard Data</span>
+                    </div>
+                  </button>
                 )}
 
                 <button

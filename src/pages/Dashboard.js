@@ -7,8 +7,11 @@ import RecentSales from '../components/dashboard/RecentSales';
 import SalesTrend from '../components/dashboard/SalesTrend';
 import { getSales } from '../services/salesService';
 import { getProducts } from '../services/productService';
+import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPeriod, setCurrentPeriod] = useState('today');
@@ -95,7 +98,6 @@ const Dashboard = () => {
         
         // Calculate top products
         const productSales = {};
-        const productNames = {}; // Store product names by name instead of ID
         
         // Process sales to calculate product quantities
         sales.forEach(sale => {
@@ -116,30 +118,30 @@ const Dashboard = () => {
           .sort((a, b) => b.count - a.count)
           .slice(0, 4);
         
-// Format recent sales
-const recentSales = sales
-  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-  .slice(0, 5)
-  .map(sale => {
-    const saleDate = new Date(sale.createdAt);
-    
-    return {
-      customer: sale.customer?.name || 'Unknown',
-      product: sale.items[0]?.name || 'Multiple items',
-      amount: sale.totalAmount,
-      // Add formatted date (MM/DD/YYYY)
-      date: saleDate.toLocaleDateString('en-US', { 
-        month: '2-digit', 
-        day: '2-digit', 
-        year: 'numeric' 
-      }),
-      // Time as before (HH:MM)
-      time: saleDate.toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      })
-    };
-  });
+        // Format recent sales
+        const recentSales = sales
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .slice(0, 5)
+          .map(sale => {
+            const saleDate = new Date(sale.createdAt);
+            
+            return {
+              customer: sale.customer?.name || 'Unknown',
+              product: sale.items[0]?.name || 'Multiple items',
+              amount: sale.totalAmount,
+              // Add formatted date (MM/DD/YYYY)
+              date: saleDate.toLocaleDateString('en-US', { 
+                month: '2-digit', 
+                day: '2-digit', 
+                year: 'numeric' 
+              }),
+              // Time as before (HH:MM)
+              time: saleDate.toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              })
+            };
+          });
         
         // Generate sales trend data based on selected period
         const generateTrendData = (periodSales, period) => {
@@ -296,13 +298,54 @@ const recentSales = sales
   // Handle period change
   const handlePeriodChange = (period) => {
     setCurrentPeriod(period);
-    
-    // In a real app, you might refresh data or apply different filters here
     console.log('Period changed to:', period);
+  };
+  
+  // Handle reset
+  const handleReset = async () => {
+    if (!window.confirm('Are you sure you want to reset dashboard data?')) {
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      
+      // Call the backend reset endpoint
+      await api.post('/admin/reset-dashboard');
+      
+      // Refetch data
+      const fetchDashboardData = async () => {
+        try {
+          // Fetch sales and products
+          const [sales, products] = await Promise.all([
+            getSales(),
+            getProducts()
+          ]);
+          
+          // Process data...
+          // (the rest of your fetchDashboardData function)
+        } catch (err) {
+          console.error('Error fetching dashboard data:', err);
+          setError('Failed to load dashboard data. Please try again.');
+          setLoading(false);
+        }
+      };
+      
+      fetchDashboardData();
+      
+      alert('Dashboard data reset successfully!');
+    } catch (error) {
+      console.error('Error resetting dashboard:', error);
+      setError('Failed to reset dashboard data.');
+      setLoading(false);
+    }
   };
 
   return (
-    <MainLayout title="Dashboard">
+    <MainLayout 
+      title="Dashboard"
+      onReset={user?.role === 'admin' ? handleReset : undefined}
+    >
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <p className="text-xl text-gray-400">Loading dashboard data...</p>

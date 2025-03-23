@@ -2,9 +2,9 @@
 import React from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import { useAuth } from '../../context/AuthContext'; // Import useAuth
+import { useAuth } from '../../context/AuthContext';
 
-const MainLayout = ({ children, title, onAddNew }) => {
+const MainLayout = ({ children, title, onAddNew, onReset }) => {
   const { user, logout } = useAuth();
 
   return (
@@ -16,6 +16,7 @@ const MainLayout = ({ children, title, onAddNew }) => {
           onAddNew={onAddNew}
           user={user}
           onLogout={logout}
+          onReset={onReset}
         />
         <main className="mt-6">{children}</main>
       </div>
