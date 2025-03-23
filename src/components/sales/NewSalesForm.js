@@ -1,4 +1,4 @@
-// src/components/sales/NewSaleForm.js
+// src/components/sales/NewSalesForm.js
 import React from 'react';
 import ProductSelector from './ProductSelector';
 import SaleDetails from './SaleDetails';
@@ -8,11 +8,13 @@ const NewSaleForm = ({
   customers,
   saleItems,
   selectedCustomer,
+  comments,
   onSelectProduct,
   onUpdateQuantity,
   onRemoveItem,
   onSelectCustomer,
   onNewCustomer,
+  onCommentsChange,
   onCompleteSale,
   loading,
   error
@@ -32,6 +34,8 @@ const NewSaleForm = ({
         onSelectCustomer={onSelectCustomer}
         onNewCustomer={onNewCustomer}
         customers={customers}
+        comments={comments}
+        onCommentsChange={onCommentsChange}
       />
     </div>
   );

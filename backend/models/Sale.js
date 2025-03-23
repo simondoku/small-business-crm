@@ -35,6 +35,10 @@ const saleSchema = mongoose.Schema(
       required: true,
       default: 0,
     },
+    comments: {
+      type: String,
+      required: false,
+    }
   },
   {
     timestamps: true,

@@ -317,10 +317,7 @@ const Dashboard = () => {
       const fetchDashboardData = async () => {
         try {
           // Fetch sales and products
-          const [sales, products] = await Promise.all([
-            getSales(),
-            getProducts()
-          ]);
+          window.location.reload();
           
         } catch (err) {
           console.error('Error fetching dashboard data:', err);
