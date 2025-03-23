@@ -1,70 +1,170 @@
-# Getting Started with Create React App
+# Business CRM System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A comprehensive Customer Relationship Management system for small businesses. This application allows you to manage customers, products, and sales with a clean, intuitive interface.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- **Dashboard**: Get an overview of your business with key metrics and visualizations
+- **Customer Management**: Add, edit, and track customer information
+- **Product Management**: Manage your product catalog with inventory tracking
+- **Sales Management**: Create sales transactions and link them to customers
+- **User Authentication**: Secure login with admin and staff roles
+- **Data Analysis**: View sales trends and top products
 
-### `npm start`
+## Technology Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Frontend**: React, Tailwind CSS, Chart.js
+- **Backend**: Node.js, Express
+- **Database**: MongoDB
+- **Authentication**: JWT (JSON Web Tokens)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Prerequisites
 
-### `npm test`
+Before running this application, make sure you have the following installed:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Node.js (v14 or later)
+- npm or yarn
+- MongoDB (local or cloud instance)
 
-### `npm run build`
+## Installation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. **Clone the repository**
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+git clone https://github.com/yourusername/small-business-crm.git
+cd small-business-crm
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+2. **Install dependencies for both frontend and backend**
 
-### `npm run eject`
+```bash
+# Install frontend dependencies
+npm install
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+# Install backend dependencies
+cd backend
+npm install
+cd ..
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+3. **Create environment variables**
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Create a `.env` file in the backend directory with the following variables:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```
+PORT=5001
+MONGO_URI=mongodb://localhost:27017/small-business-crm
+JWT_SECRET=your_jwt_secret_here
+```
 
-## Learn More
+Note: Replace `your_jwt_secret_here` with a secure random string.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Running the Application
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. **Start the MongoDB service**
 
-### Code Splitting
+```bash
+# For macOS users with Homebrew
+brew services start mongodb-community
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+# For Windows users
+# MongoDB should be running as a service, or you can start it manually
+```
 
-### Analyzing the Bundle Size
+2. **Start the backend server**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```bash
+cd backend
+npm run dev
+```
 
-### Making a Progressive Web App
+This will start the backend server on port 5001 (or your specified port in the .env file).
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+3. **Start the frontend development server**
 
-### Advanced Configuration
+```bash
+# Open a new terminal and run
+npm start
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+This will start the React development server, typically on port 3000.
 
-### Deployment
+4. **Create an admin user**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+For first-time setup, you'll need to create an admin user. Run the provided script:
 
-### `npm run build` fails to minify
+```bash
+cd backend
+node scripts/createAdmin.js
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This will create an admin user with the following credentials:
+- Email: admin@example.com
+- Password: admin123
+
+5. **Access the application**
+
+Open your browser and navigate to `http://localhost:3000`
+
+You can now log in with the admin credentials created in the previous step.
+
+## Usage
+
+### Dashboard
+
+The dashboard provides an overview of your business with:
+- Sales metrics
+- Top-selling products
+- Recent transactions
+- Sales trends
+
+### Products
+
+Manage your product catalog:
+- Add new products with name, price, and stock quantities
+- Edit existing products
+- Remove products from your inventory
+
+### Customers
+
+Maintain your customer database:
+- Add customer contact information
+- View purchase history
+- Track total purchases and customer value
+
+### Sales
+
+Record sales transactions:
+- Select products from your catalog
+- Add quantities
+- Link to existing customers or add new ones
+- Complete sales with automatic timestamps
+
+## Troubleshooting
+
+### Connection Issues
+
+If you encounter MongoDB connection errors, make sure:
+- MongoDB service is running
+- Your MONGO_URI in the .env file is correct
+- Your network allows connections to the database
+
+### Authentication Issues
+
+If you encounter "secretOrPrivateKey must have a value" errors:
+- Check that your JWT_SECRET is correctly set in the .env file
+- Ensure the .env file is in the correct location (in the backend directory)
+- Restart the backend server after making changes to environment variables
+
+## License
+
+[MIT](LICENSE)
+
+## Contributing
+
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
+---
+
+Feel free to contact me at simondoku9@gmail.com if you have any questions or feedback!
+Made with ❤️ Simon Doku
