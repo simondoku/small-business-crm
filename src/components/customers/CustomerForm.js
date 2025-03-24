@@ -81,9 +81,9 @@ const CustomerForm = ({ customer = null, onSave, onCancel, customers = [] }) => 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-dark-400 rounded-lg w-full max-w-md mx-auto">
-        <div className="flex justify-between items-center p-4 border-b border-dark-300">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-dark-400 rounded-lg w-full max-w-md mx-auto overflow-y-auto max-h-[90vh]">
+        <div className="flex justify-between items-center p-4 border-b border-dark-300 sticky top-0 bg-dark-400">
           <h2 className="text-lg font-semibold">{customer ? 'Edit Customer' : 'Add New Customer'}</h2>
           <button 
             onClick={onCancel}
@@ -152,17 +152,17 @@ const CustomerForm = ({ customer = null, onSave, onCancel, customers = [] }) => 
             ></textarea>
           </div>
           
-          <div className="flex space-x-4">
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 py-2 bg-dark-200 text-white rounded-md hover:bg-dark-100"
+              className="py-2 bg-dark-200 text-white rounded-md hover:bg-dark-100 sm:flex-1"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 py-2 bg-primary text-white rounded-md hover:bg-opacity-90"
+              className="py-2 bg-primary text-white rounded-md hover:bg-opacity-90 sm:flex-1"
             >
               {customer ? 'Update Customer' : 'Add Customer'}
             </button>
