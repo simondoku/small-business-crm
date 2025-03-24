@@ -4,16 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
 import NewSaleForm from '../components/sales/NewSalesForm';
 import LoadingScreen from '../components/common/LoadingScreen';
-import PermissionDenied from '../components/common/PermissionDenied';
 import { getProducts } from '../services/productService';
 import { getCustomers, createCustomer } from '../services/customerService';
 import { createSale } from '../services/salesService';
-import { useAuth } from '../context/AuthContext';
-import { hasPermission } from '../utils/authUtils';
+import { ExclamationIcon } from '@heroicons/react/solid';
 
 const NewSale = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [saleItems, setSaleItems] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [comments, setComments] = useState('');
@@ -21,19 +18,12 @@ const NewSale = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // Check user permissions for creating sales
-  const canCreateSales = hasPermission(user, 'staff');
+  const [stockWarnings, setStockWarnings] = useState(null);
   
   // Fetch products and customers from API
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (!canCreateSales) {
-          setLoading(false);
-          return;
-        }
-        
         setLoading(true);
         
         // Fetch products
@@ -53,9 +43,8 @@ const NewSale = () => {
     };
 
     fetchData();
-  }, [canCreateSales]);
+  }, []);
   
-  // Rest of component logic remains the same
   const handleSelectProduct = (product) => {
     // Check if product is already in the sale
     const existingItem = saleItems.find(item => item._id === product._id);
@@ -67,9 +56,32 @@ const NewSale = () => {
       // Add new item with quantity 1
       setSaleItems([...saleItems, { ...product, quantity: 1 }]);
     }
+
+    // Check for low stock warning
+    if (product.stock <= 5 && product.stock > 0) {
+      setStockWarnings({
+        type: 'low',
+        product: product.name,
+        stock: product.stock
+      });
+    }
   };
   
   const handleUpdateQuantity = (productId, newQuantity) => {
+    // Get the product to check stock
+    const product = products.find(p => p._id === productId);
+    
+    // Don't allow quantity higher than stock unless stock is already 0
+    if (product.stock > 0 && newQuantity > product.stock) {
+      setStockWarnings({
+        type: 'insufficient',
+        product: product.name,
+        stock: product.stock,
+        requested: newQuantity
+      });
+      return;
+    }
+    
     setSaleItems(saleItems.map(item => 
       item._id === productId ? { ...item, quantity: newQuantity } : item
     ));
@@ -133,6 +145,21 @@ const NewSale = () => {
       // Create the sale through API
       const result = await createSale(saleData);
       
+      // Check for warnings
+      if (result.warnings) {
+        if (result.warnings.lowStock) {
+          alert(`Warning: Low stock for the following products:\n${
+            result.warnings.lowStock.map(p => `${p.name}: Only ${p.stock} left`).join('\n')
+          }`);
+        }
+        
+        if (result.warnings.soldOut) {
+          alert(`The following products are out of stock:\n${
+            result.warnings.soldOut.map(p => p.name).join('\n')
+          }`);
+        }
+      }
+      
       // Reset form
       setSaleItems([]);
       setSelectedCustomer(null);
@@ -147,36 +174,61 @@ const NewSale = () => {
       alert(`Failed to complete sale: ${errorMsg}`);
     }
   };
-
-  if (loading) {
-    return <LoadingScreen message="Loading sales data..." />;
-  }
-
-  if (!canCreateSales) {
-    return <PermissionDenied />;
-  }
   
   return (
     <MainLayout title="New Sale">
-      {error ? (
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <p className="text-xl text-gray-400">Loading data...</p>
+        </div>
+      ) : error ? (
         <div className="bg-red-500 bg-opacity-10 border border-red-500 rounded-lg p-4 mb-4">
           <p className="text-red-500">{error}</p>
         </div>
       ) : (
-        <NewSaleForm
-          products={products}
-          customers={customers}
-          saleItems={saleItems}
-          selectedCustomer={selectedCustomer}
-          comments={comments}
-          onSelectProduct={handleSelectProduct}
-          onUpdateQuantity={handleUpdateQuantity}
-          onRemoveItem={handleRemoveItem}
-          onSelectCustomer={setSelectedCustomer}
-          onNewCustomer={handleNewCustomer}
-          onCommentsChange={handleCommentsChange}
-          onCompleteSale={handleCompleteSale}
-        />
+        <>
+          {stockWarnings && (
+            <div className="mb-4 bg-yellow-500 bg-opacity-10 border border-yellow-500 rounded-lg p-4 flex items-start">
+              <ExclamationIcon className="h-5 w-5 text-yellow-500 mr-2 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-medium text-yellow-500">Stock Warning</h3>
+                {stockWarnings.type === 'low' && (
+                  <p className="text-sm text-yellow-500">
+                    Low stock for {stockWarnings.product}: Only {stockWarnings.stock} units left.
+                  </p>
+                )}
+                {stockWarnings.type === 'insufficient' && (
+                  <p className="text-sm text-yellow-500">
+                    Insufficient stock for {stockWarnings.product}. Available: {stockWarnings.stock}, Requested: {stockWarnings.requested}
+                  </p>
+                )}
+              </div>
+              <button 
+                onClick={() => setStockWarnings(null)} 
+                className="ml-auto text-yellow-500 hover:text-yellow-700"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+          
+          <NewSaleForm
+            products={products}
+            customers={customers}
+            saleItems={saleItems}
+            selectedCustomer={selectedCustomer}
+            comments={comments}
+            onSelectProduct={handleSelectProduct}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveItem={handleRemoveItem}
+            onSelectCustomer={setSelectedCustomer}
+            onNewCustomer={handleNewCustomer}
+            onCommentsChange={handleCommentsChange}
+            onCompleteSale={handleCompleteSale}
+            loading={loading}
+            error={error}
+          />
+        </>
       )}
     </MainLayout>
   );

@@ -1,3 +1,4 @@
+// src/services/salesService.js
 import api from './api';
 
 // Get all sales

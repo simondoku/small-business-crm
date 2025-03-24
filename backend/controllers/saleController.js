@@ -1,8 +1,6 @@
 // backend/controllers/saleController.js
 const Customer = require('../models/Customer');
 const Product = require('../models/Product');
-
-// Import the Sale model properly
 const Sale = require('../models/Sale');
 
 // Get all sales
@@ -36,9 +34,9 @@ const getSaleById = async (req, res) => {
   }
 };
 
-// Create a sale
+// Create a sale with inventory management
 const createSale = async (req, res) => {
-  try {    
+  try {
     const { customerId, items, comments } = req.body;
     
     // Basic validation
@@ -59,13 +57,40 @@ const createSale = async (req, res) => {
     // Calculate total and prepare items
     let totalAmount = 0;
     const saleItems = [];
+    const lowStockProducts = [];
+    const soldOutProducts = [];
     
+    // Process each item
     for (const item of items) {
-      
       // Find product
       const product = await Product.findById(item.productId);
       if (!product) {
         return res.status(404).json({ message: `Product with ID ${item.productId} not found` });
+      }
+      
+      // Check stock levels
+      if (product.stock < item.quantity) {
+        if (product.stock <= 0) {
+          soldOutProducts.push({
+            id: product._id,
+            name: product.name,
+            requested: item.quantity,
+            available: 0
+          });
+        } else {
+          return res.status(400).json({ 
+            message: `Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}` 
+          });
+        }
+      }
+      
+      // Keep track of products with low stock
+      if (product.stock <= 5 && product.stock > 0) {
+        lowStockProducts.push({
+          id: product._id,
+          name: product.name,
+          stock: product.stock
+        });
       }
       
       // Calculate item total
@@ -79,9 +104,15 @@ const createSale = async (req, res) => {
         quantity: item.quantity,
         price: product.price,
       });
+      
+      // Reduce stock
+      if (product.stock > 0) {
+        product.stock = Math.max(0, product.stock - item.quantity);
+        await product.save();
+      }
     }
     
-    // Create the sale document using the model directly
+    // Create the sale document
     const newSale = new Sale({
       customer: customer._id,
       items: saleItems,
@@ -97,13 +128,19 @@ const createSale = async (req, res) => {
     customer.lastPurchaseDate = Date.now();
     await customer.save();
     
-    res.status(201).json(savedSale);
+    // Return response with warnings for low stock
+    res.status(201).json({
+      sale: savedSale,
+      warnings: {
+        lowStock: lowStockProducts.length > 0 ? lowStockProducts : null,
+        soldOut: soldOutProducts.length > 0 ? soldOutProducts : null
+      }
+    });
   } catch (error) {
-    console.error('Error creating sale:', error);
     res.status(500).json({ message: error.message });
   }
 };
-// Add this new function to your saleController.js
+
 // Get monthly sales data (add this before the module.exports)
 const getMonthlySales = async (req, res) => {
   try {
