@@ -1,10 +1,10 @@
-// src/components/auth/PrivateRoute.js
+// src/components/auth/AdminRoute.js
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const PrivateRoute = ({ children }) => {
-    const { user, loading, initialized } = useAuth();
+const AdminRoute = ({ children }) => {
+    const { user, loading } = useAuth();
 
     if (loading) {
         return (
@@ -14,17 +14,17 @@ const PrivateRoute = ({ children }) => {
         );
     }
 
-    // If system is not initialized, redirect to setup page
-    if (!initialized) {
-        return <Navigate to="/setup" />;
-    }
-
-    // If user is not logged in, redirect to login page
+    // Check if user is logged in and is an admin
     if (!user) {
         return <Navigate to="/login" />;
+    }
+
+    // If user is not an admin, redirect to dashboard
+    if (user.role !== 'admin') {
+        return <Navigate to="/" />;
     }
 
     return children;
 };
 
-export default PrivateRoute;
+export default AdminRoute;

@@ -10,7 +10,7 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
-    const { login, user } = useAuth();
+    const { user, login, initialized } = useAuth();
 
     // Redirect if already logged in
     useEffect(() => {
@@ -30,10 +30,16 @@ const Login = () => {
 
         try {
             setLoading(true);
-            await login(email, password);
-            navigate('/');
+            const result = await login(email, password);
+            
+            if (result.success) {
+                navigate('/');
+            } else {
+                setError(result.message);
+            }
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to login. Please try again.');
+            setError('An unexpected error occurred. Please try again.');
+        } finally {
             setLoading(false);
         }
     };
@@ -96,12 +102,25 @@ const Login = () => {
                     </div>
 
                     <div className="text-center">
-                        <p className="text-sm text-gray-400">
-                            Don't have an account? Contact your administrator.
-                        </p>
-                        <Link to="/register" className="text-sm text-primary hover:text-purple-400">
-                            First time setup? Create admin account
-                        </Link>
+                        {!initialized ? (
+                            <div className="bg-primary bg-opacity-10 border border-primary rounded-md p-4 text-center">
+                                <p className="text-white mb-2">Welcome to Business CRM!</p>
+                                <p className="text-sm text-gray-300 mb-3">
+                                    This appears to be your first time using the app. 
+                                    Register now to create an administrator account.
+                                </p>
+                                <Link 
+                                    to="/setup" 
+                                    className="inline-block bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90"
+                                >
+                                    Set Up Your Account
+                                </Link>
+                            </div>
+                        ) : (
+                            <p className="text-sm text-gray-400">
+                                Don't have an account? Contact your administrator.
+                            </p>
+                        )}
                     </div>
                 </form>
             </div>
