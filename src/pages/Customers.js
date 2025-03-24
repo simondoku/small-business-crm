@@ -1,4 +1,4 @@
-// src/pages/Customers.js
+// src/pages/Customers.js - Complete replacement
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
@@ -20,6 +20,7 @@ const Customers = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [forceRefresh, setForceRefresh] = useState(0); // Used to force re-fetch
 
   // Fetch customers from API
   useEffect(() => {
@@ -28,16 +29,16 @@ const Customers = () => {
         setLoading(true);
         const data = await getCustomers();
         setCustomers(data);
-        setLoading(false);
       } catch (err) {
         console.error('Error fetching customers:', err);
         setError('Failed to load customers. Please try again.');
+      } finally {
         setLoading(false);
       }
     };
 
     fetchCustomers();
-  }, []);
+  }, [forceRefresh]); // Re-fetch when forceRefresh changes
 
   // Check if we should show the form based on navigation state
   useEffect(() => {
@@ -67,16 +68,16 @@ const Customers = () => {
     try {
       if (customerData._id) {
         // Update existing customer
-        const updatedCustomer = await updateCustomer(customerData._id, customerData);
-        setCustomers(customers.map(c => 
-          c._id === updatedCustomer._id ? { ...c, ...updatedCustomer } : c
-        ));
+        await updateCustomer(customerData._id, customerData);
       } else {
         // Add new customer
-        const newCustomer = await createCustomer(customerData);
-        setCustomers([...customers, newCustomer]);
+        await createCustomer(customerData);
       }
+      
+      // Close form and force refresh data
       setShowForm(false);
+      setForceRefresh(prev => prev + 1); // This triggers the useEffect to re-fetch
+      
     } catch (err) {
       console.error('Error saving customer:', err);
       alert('Failed to save customer. Please try again.');
@@ -86,8 +87,8 @@ const Customers = () => {
   const handleDelete = async (customerId) => {
     try {
       await deleteCustomer(customerId);
-      setCustomers(customers.filter(c => c._id !== customerId));
       setShowDetail(false);
+      setForceRefresh(prev => prev + 1); // Force refresh after delete
       alert('Customer deleted successfully');
     } catch (err) {
       console.error('Error deleting customer:', err);

@@ -18,7 +18,8 @@ const CustomerForm = ({ customer = null, onSave, onCancel, customers = [] }) => 
         name: customer.name || '',
         phone: customer.phone || '',
         address: customer.address || '',
-        email: customer.email || ''
+        email: customer.email || '',
+        _id: customer._id // Make sure to include _id for updates
       });
     }
   }, [customer]);
@@ -46,7 +47,7 @@ const CustomerForm = ({ customer = null, onSave, onCancel, customers = [] }) => 
     }
     
     // Check for duplicates
-    if (formData.phone && !customer?.id) {
+    if (formData.phone && !customer?._id) {
       const duplicate = customers.find(c => c.phone === formData.phone);
       if (duplicate) {
         newErrors.phone = 'This phone number is already registered';
@@ -54,8 +55,8 @@ const CustomerForm = ({ customer = null, onSave, onCancel, customers = [] }) => 
     }
     
     // If editing, only check for duplicates with other customers
-    if (formData.phone && customer?.id) {
-      const duplicate = customers.find(c => c.phone === formData.phone && c.id !== customer.id);
+    if (formData.phone && customer?._id) {
+      const duplicate = customers.find(c => c.phone === formData.phone && c._id !== customer._id);
       if (duplicate) {
         newErrors.phone = 'This phone number is already registered';
       }
@@ -72,12 +73,8 @@ const CustomerForm = ({ customer = null, onSave, onCancel, customers = [] }) => 
       return;
     }
     
-    // If editing, pass the id
-    if (customer && customer.id) {
-      onSave({ ...formData, id: customer.id });
-    } else {
-      onSave(formData);
-    }
+    // Pass the complete customer data including _id if editing
+    onSave(formData);
   };
 
   return (

@@ -1,16 +1,38 @@
 // src/components/customers/CustomerList.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SearchIcon, PencilIcon, TrashIcon, PhoneIcon, LocationMarkerIcon } from '@heroicons/react/solid';
 
 const CustomerList = ({ customers = [], onEdit, onDelete }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [filteredCustomers, setFilteredCustomers] = useState([]);
   
-  // Filter customers based on search
-  const filteredCustomers = customers.filter(customer => 
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.phone.includes(searchTerm) ||
-    (customer.address && customer.address.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  // Update filtered customers whenever the customers prop or search term changes
+  useEffect(() => {
+    if (!customers) return;
+    
+    const filtered = customers.filter(customer => 
+      customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.phone?.includes(searchTerm) ||
+      (customer.address && customer.address.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+    
+    setFilteredCustomers(filtered);
+  }, [customers, searchTerm]);
+  
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+  
+  // Format date helper
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Never';
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
+  };
   
   return (
     <div className="bg-dark-400 rounded-lg overflow-hidden">
@@ -23,7 +45,7 @@ const CustomerList = ({ customers = [], onEdit, onDelete }) => {
             <input
               type="text"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
               className="pl-10 pr-4 py-2 rounded-lg bg-dark-200 text-white focus:outline-none focus:ring-1 focus:ring-primary"
               placeholder="Search customers..."
             />
@@ -36,7 +58,7 @@ const CustomerList = ({ customers = [], onEdit, onDelete }) => {
 
       {filteredCustomers.length === 0 ? (
         <div className="p-8 text-center text-gray-400">
-          No customers match your search
+          {searchTerm ? 'No customers match your search' : 'No customers found. Add your first customer!'}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
@@ -63,7 +85,7 @@ const CustomerList = ({ customers = [], onEdit, onDelete }) => {
               
               <div className="flex items-center mb-3">
                 <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white text-lg font-medium mr-3">
-                  {customer.name.split(' ').map(n => n[0]).join('')}
+                  {customer.name?.split(' ').map(n => n?.[0] || '').join('')}
                 </div>
                 <div>
                   <h3 className="font-medium text-lg">{customer.name}</h3>
@@ -89,7 +111,7 @@ const CustomerList = ({ customers = [], onEdit, onDelete }) => {
                   </div>
                   <div className="flex justify-between text-sm mt-1">
                     <span>Last Purchase</span>
-                    <span>{new Date(customer.lastPurchaseDate).toLocaleDateString()}</span>
+                    <span>{formatDate(customer.lastPurchaseDate)}</span>
                   </div>
                 </div>
               )}
