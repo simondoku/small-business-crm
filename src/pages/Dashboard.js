@@ -1,7 +1,6 @@
 // src/pages/Dashboard.js
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { UserAddIcon, RefreshIcon } from '@heroicons/react/solid';
 import MainLayout from '../components/layout/MainLayout';
 import SalesOverview from '../components/dashboard/SalesOverview';
 import TopProducts from '../components/dashboard/TopProducts';
@@ -9,13 +8,17 @@ import RecentSales from '../components/dashboard/RecentSales';
 import SalesTrend from '../components/dashboard/SalesTrend';
 import { getSales } from '../services/salesService';
 import { getProducts } from '../services/productService';
+import { getCustomers } from '../services/customerService';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getUserFeatures } from '../utils/authUtils';
 import LoadingScreen from '../components/common/LoadingScreen';
+import { RefreshIcon, UserAddIcon } from '@heroicons/react/solid';
+
 const Dashboard = () => {
   const { user } = useAuth();
   const userFeatures = getUserFeatures(user);
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPeriod, setCurrentPeriod] = useState('today');
@@ -42,14 +45,12 @@ const Dashboard = () => {
       try {
         setLoading(true);
         
-        // Fetch sales and products
-        const [sales, products] = await Promise.all([
+        // Fetch sales, products, and customers
+        const [sales, products, customers] = await Promise.all([
           getSales(),
-          getProducts()
+          getProducts(),
+          getCustomers()
         ]);
-        
-        console.log('Fetched sales:', sales);
-        console.log('Fetched products:', products);
         
         // Process data for different time periods
         const today = new Date();
@@ -60,6 +61,27 @@ const Dashboard = () => {
         
         const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
         const yearStart = new Date(today.getFullYear(), 0, 1);
+        
+        // Calculate new customers
+        const todayCustomers = customers.filter(customer => {
+          const customerDate = new Date(customer.createdAt);
+          return customerDate >= today;
+        }).length;
+
+        const weekCustomers = customers.filter(customer => {
+          const customerDate = new Date(customer.createdAt);
+          return customerDate >= weekStart;
+        }).length;
+
+        const monthCustomers = customers.filter(customer => {
+          const customerDate = new Date(customer.createdAt);
+          return customerDate >= monthStart;
+        }).length;
+
+        const yearCustomers = customers.filter(customer => {
+          const customerDate = new Date(customer.createdAt);
+          return customerDate >= yearStart;
+        }).length;
         
         // Filter sales by period
         const todaySales = sales.filter(sale => {
@@ -88,15 +110,10 @@ const Dashboard = () => {
           const transactions = salesData.length;
           const avgSale = transactions > 0 ? (totalRevenue / transactions) : 0;
           
-          // You would need to track new customers in a real app
-          // For now, we'll just use a placeholder
-          const newCustomers = 0;
-          
           return {
             revenue: totalRevenue,
             transactions,
-            avgSale,
-            newCustomers
+            avgSale
           };
         };
         
@@ -278,10 +295,22 @@ const Dashboard = () => {
         // Update dashboard data
         setDashboardData({
           salesOverview: {
-            today: calculateMetrics(todaySales),
-            week: calculateMetrics(weekSales),
-            month: calculateMetrics(monthSales),
-            year: calculateMetrics(yearSales)
+            today: { 
+              ...calculateMetrics(todaySales),
+              newCustomers: todayCustomers 
+            },
+            week: { 
+              ...calculateMetrics(weekSales),
+              newCustomers: weekCustomers 
+            },
+            month: { 
+              ...calculateMetrics(monthSales),
+              newCustomers: monthCustomers 
+            },
+            year: { 
+              ...calculateMetrics(yearSales),
+              newCustomers: yearCustomers 
+            }
           },
           topProducts,
           recentSales,
@@ -302,10 +331,9 @@ const Dashboard = () => {
   // Handle period change
   const handlePeriodChange = (period) => {
     setCurrentPeriod(period);
-    console.log('Period changed to:', period);
   };
-
-  // Modify the handleReset function to include permission check
+  
+  // Handle reset
   const handleReset = async () => {
     if (!userFeatures.resetData) {
       alert('You do not have permission to reset the dashboard.');
@@ -319,8 +347,6 @@ const Dashboard = () => {
     try {
       setLoading(true);
       await api.post('/admin/reset-dashboard');
-      
-      // Simplified refresh approach
       window.location.reload();
     } catch (error) {
       console.error('Error resetting dashboard:', error);
