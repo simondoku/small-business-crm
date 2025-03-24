@@ -1,5 +1,7 @@
 // src/pages/Dashboard.js
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { UserAddIcon, RefreshIcon } from '@heroicons/react/solid';
 import MainLayout from '../components/layout/MainLayout';
 import SalesOverview from '../components/dashboard/SalesOverview';
 import TopProducts from '../components/dashboard/TopProducts';
@@ -9,9 +11,11 @@ import { getSales } from '../services/salesService';
 import { getProducts } from '../services/productService';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-
+import { getUserFeatures } from '../utils/authUtils';
+import LoadingScreen from '../components/common/LoadingScreen';
 const Dashboard = () => {
   const { user } = useAuth();
+  const userFeatures = getUserFeatures(user);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPeriod, setCurrentPeriod] = useState('today');
@@ -300,35 +304,24 @@ const Dashboard = () => {
     setCurrentPeriod(period);
     console.log('Period changed to:', period);
   };
-  
-  // Handle reset
+
+  // Modify the handleReset function to include permission check
   const handleReset = async () => {
+    if (!userFeatures.resetData) {
+      alert('You do not have permission to reset the dashboard.');
+      return;
+    }
+    
     if (!window.confirm('Are you sure you want to reset dashboard data?')) {
       return;
     }
     
     try {
       setLoading(true);
-      
-      // Call the backend reset endpoint
       await api.post('/admin/reset-dashboard');
       
-      // Refetch data
-      const fetchDashboardData = async () => {
-        try {
-          // Fetch sales and products
-          window.location.reload();
-          
-        } catch (err) {
-          console.error('Error fetching dashboard data:', err);
-          setError('Failed to load dashboard data. Please try again.');
-          setLoading(false);
-        }
-      };
-      
-      fetchDashboardData();
-      
-      alert('Dashboard data reset successfully!');
+      // Simplified refresh approach
+      window.location.reload();
     } catch (error) {
       console.error('Error resetting dashboard:', error);
       setError('Failed to reset dashboard data.');
@@ -336,44 +329,69 @@ const Dashboard = () => {
     }
   };
 
-  
-return (
-  <MainLayout 
-    title="Dashboard"
-    onReset={user?.role === 'admin' ? handleReset : undefined}
-  >
-    {loading ? (
-      <div className="flex justify-center items-center h-64">
-        <p className="text-xl text-gray-400">Loading dashboard data...</p>
-      </div>
-    ) : error ? (
-      <div className="bg-red-500 bg-opacity-10 border border-red-500 rounded-lg p-4 mb-4">
-        <p className="text-red-500">{error}</p>
-      </div>
-    ) : (
-      <div className="space-y-6">
-        {/* Full-width Sales Overview on mobile and tablet */}
-        <div className="w-full">
-          <SalesOverview 
-            data={dashboardData.salesOverview} 
-            onPeriodChange={handlePeriodChange} 
-          />
-        </div>
+  if (loading) {
+    return <LoadingScreen message="Loading dashboard data..." />;
+  }
 
-        {/* Grid layout that stacks on mobile and becomes 2-column on larger screens */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <TopProducts products={dashboardData.topProducts} />
-          <RecentSales sales={dashboardData.recentSales} />
-          <SalesTrend 
-            data={dashboardData.salesTrend[currentPeriod]} 
-            period={currentPeriod} 
-          />
-          {/* If you have a fourth panel, it would go here */}
+  return (
+    <MainLayout 
+      title="Dashboard"
+      onReset={userFeatures.resetData ? handleReset : undefined}
+    >
+      {error ? (
+        <div className="bg-red-500 bg-opacity-10 border border-red-500 rounded-lg p-4 mb-4">
+          <p className="text-red-500">{error}</p>
         </div>
-      </div>
-    )}
-  </MainLayout>
-);
+      ) : (
+        <div className="space-y-6">
+          {/* Full-width Sales Overview on mobile and tablet */}
+          <div className="w-full">
+            <SalesOverview 
+              data={dashboardData.salesOverview} 
+              onPeriodChange={handlePeriodChange} 
+            />
+          </div>
+
+          {/* Grid layout that stacks on mobile and becomes 2-column on larger screens */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <TopProducts products={dashboardData.topProducts} />
+            <RecentSales sales={dashboardData.recentSales} />
+            <SalesTrend 
+              data={dashboardData.salesTrend[currentPeriod]} 
+              period={currentPeriod} 
+            />
+            
+            {/* Admin-only feature example */}
+            {userFeatures.userManagement && (
+              <div className="bg-dark-400 rounded-lg p-4">
+                <h2 className="text-lg font-medium mb-4">Admin Actions</h2>
+                <div className="space-y-2">
+                  <Link 
+                    to="/register"
+                    className="block w-full bg-primary bg-opacity-20 text-primary p-3 rounded-lg hover:bg-opacity-30 transition-colors"
+                  >
+                    <div className="flex items-center">
+                      <UserAddIcon className="h-5 w-5 mr-2" />
+                      <span>Add New Staff Member</span>
+                    </div>
+                  </Link>
+                  <button
+                    onClick={handleReset}
+                    className="block w-full bg-red-500 bg-opacity-20 text-red-500 p-3 rounded-lg hover:bg-opacity-30 transition-colors"
+                  >
+                    <div className="flex items-center">
+                      <RefreshIcon className="h-5 w-5 mr-2" />
+                      <span>Reset Dashboard Data</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </MainLayout>
+  );
 };
 
 export default Dashboard;

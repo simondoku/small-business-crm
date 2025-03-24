@@ -38,9 +38,7 @@ const getSaleById = async (req, res) => {
 
 // Create a sale
 const createSale = async (req, res) => {
-  try {
-    console.log('Sale creation request body:', req.body);
-    
+  try {    
     const { customerId, items, comments } = req.body;
     
     // Basic validation
@@ -63,7 +61,6 @@ const createSale = async (req, res) => {
     const saleItems = [];
     
     for (const item of items) {
-      console.log('Processing item:', item);
       
       // Find product
       const product = await Product.findById(item.productId);

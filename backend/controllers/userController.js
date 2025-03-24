@@ -1,10 +1,9 @@
 // backend/controllers/userController.js
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
+const bcrypt = require('bcryptjs');
 
-// @desc    Auth user & get token
-// @route   POST /api/users/login
-// @access  Public
+// Auth user & get token
 const authUser = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -25,31 +24,31 @@ const authUser = async (req, res) => {
             res.status(401).json({ message: 'Invalid email or password' });
         }
     } catch (error) {
-        console.error('Login error:', error);
         res.status(500).json({ message: error.message });
     }
 };
 
-// @desc    Register a new user
-// @route   POST /api/users
-// @access  Public
+// Register a new user
 const registerUser = async (req, res) => {
     try {
         const { name, email, password, role } = req.body;
 
         // Check if user already exists
         const userExists = await User.findOne({ email });
-
         if (userExists) {
             return res.status(400).json({ message: 'User already exists' });
         }
+
+        // Check if this is the first user (will be admin)
+        const userCount = await User.countDocuments();
+        const userRole = userCount === 0 ? 'admin' : (role || 'staff');
 
         // Create new user
         const user = await User.create({
             name,
             email,
             password,
-            role: role || 'staff',
+            role: userRole,
         });
 
         if (user) {
@@ -64,14 +63,11 @@ const registerUser = async (req, res) => {
             res.status(400).json({ message: 'Invalid user data' });
         }
     } catch (error) {
-        console.error('Registration error:', error);
         res.status(500).json({ message: error.message });
     }
 };
 
-// @desc    Get user profile
-// @route   GET /api/users/profile
-// @access  Private
+// Get user profile
 const getUserProfile = async (req, res) => {
     try {
         // User is available from auth middleware
@@ -88,11 +84,11 @@ const getUserProfile = async (req, res) => {
             res.status(404).json({ message: 'User not found' });
         }
     } catch (error) {
-        console.error('Get profile error:', error);
         res.status(500).json({ message: error.message });
     }
 };
 
+// Check if system has been initialized (has any users)
 const checkSetup = async (req, res) => {
     try {
         const userCount = await User.countDocuments();
@@ -102,10 +98,25 @@ const checkSetup = async (req, res) => {
     }
 };
 
+// Get all users (admin only)
+const getUsers = async (req, res) => {
+    try {
+        // Only admins can view all users
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        const users = await User.find({}).select('-password');
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
 module.exports = {
     authUser,
     registerUser,
     getUserProfile,
-    checkSetup
+    checkSetup,
+    getUsers
 };

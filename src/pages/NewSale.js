@@ -3,12 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
 import NewSaleForm from '../components/sales/NewSalesForm';
+import LoadingScreen from '../components/common/LoadingScreen';
+import PermissionDenied from '../components/common/PermissionDenied';
 import { getProducts } from '../services/productService';
 import { getCustomers, createCustomer } from '../services/customerService';
 import { createSale } from '../services/salesService';
+import { useAuth } from '../context/AuthContext';
+import { hasPermission } from '../utils/authUtils';
 
 const NewSale = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [saleItems, setSaleItems] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [comments, setComments] = useState('');
@@ -17,10 +22,18 @@ const NewSale = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
+  // Check user permissions for creating sales
+  const canCreateSales = hasPermission(user, 'staff');
+  
   // Fetch products and customers from API
   useEffect(() => {
     const fetchData = async () => {
       try {
+        if (!canCreateSales) {
+          setLoading(false);
+          return;
+        }
+        
         setLoading(true);
         
         // Fetch products
@@ -40,8 +53,9 @@ const NewSale = () => {
     };
 
     fetchData();
-  }, []);
+  }, [canCreateSales]);
   
+  // Rest of component logic remains the same
   const handleSelectProduct = (product) => {
     // Check if product is already in the sale
     const existingItem = saleItems.find(item => item._id === product._id);
@@ -116,11 +130,8 @@ const NewSale = () => {
         comments: comments
       };
       
-      console.log('Submitting sale:', saleData);
-      
       // Create the sale through API
       const result = await createSale(saleData);
-      console.log('Sale created:', result);
       
       // Reset form
       setSaleItems([]);
@@ -136,14 +147,18 @@ const NewSale = () => {
       alert(`Failed to complete sale: ${errorMsg}`);
     }
   };
+
+  if (loading) {
+    return <LoadingScreen message="Loading sales data..." />;
+  }
+
+  if (!canCreateSales) {
+    return <PermissionDenied />;
+  }
   
   return (
     <MainLayout title="New Sale">
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <p className="text-xl text-gray-400">Loading data...</p>
-        </div>
-      ) : error ? (
+      {error ? (
         <div className="bg-red-500 bg-opacity-10 border border-red-500 rounded-lg p-4 mb-4">
           <p className="text-red-500">{error}</p>
         </div>
@@ -161,8 +176,6 @@ const NewSale = () => {
           onNewCustomer={handleNewCustomer}
           onCommentsChange={handleCommentsChange}
           onCompleteSale={handleCompleteSale}
-          loading={loading}
-          error={error}
         />
       )}
     </MainLayout>
