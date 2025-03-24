@@ -1,35 +1,45 @@
 // src/components/layout/Header.js
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { PlusIcon, UserIcon, LogoutIcon, RefreshIcon } from '@heroicons/react/solid';
+import { PlusIcon, UserIcon, LogoutIcon, RefreshIcon, MenuIcon } from '@heroicons/react/solid';
 
-const Header = ({ title, onAddNew, user, onLogout, onReset }) => {
+const Header = ({ title, onAddNew, user, onLogout, onReset, onToggleSidebar }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   return (
-    <header className="bg-dark-400 rounded-lg p-4 flex justify-between items-center">
-      <h1 className="text-xl font-semibold">{title || 'Business CRM'}</h1>
-      <div className="flex items-center space-x-4">
+    <header className="bg-dark-400 p-3 md:p-4 flex justify-between items-center sticky top-0 z-10">
+      <div className="flex items-center">
+        {/* Mobile menu toggle */}
+        <button 
+          onClick={onToggleSidebar}
+          className="md:hidden mr-3 text-white"
+        >
+          <MenuIcon className="h-6 w-6" />
+        </button>
+        <h1 className="text-lg md:text-xl font-semibold truncate">{title || 'Business CRM'}</h1>
+      </div>
+
+      <div className="flex items-center space-x-2 md:space-x-4">
         {onAddNew && (
           <button
             onClick={onAddNew}
-            className="bg-primary h-10 w-10 rounded-full flex items-center justify-center"
+            className="bg-primary h-8 w-8 md:h-10 md:w-10 rounded-full flex items-center justify-center"
           >
-            <PlusIcon className="h-6 w-6 text-white" />
+            <PlusIcon className="h-5 w-5 md:h-6 md:w-6 text-white" />
           </button>
         )}
 
         <div className="relative">
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className="bg-dark-300 h-10 px-3 rounded-full flex items-center justify-center text-white"
+            className="bg-dark-300 h-8 md:h-10 px-2 md:px-3 rounded-full flex items-center justify-center text-white"
           >
-            <UserIcon className="h-5 w-5 mr-2" />
-            <span>{user?.name?.split(' ')[0]}</span>
+            <UserIcon className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
+            <span className="hidden xs:inline">{user?.name?.split(' ')[0]}</span>
           </button>
 
           {showUserMenu && (
-            <div className="absolute right-0 mt-2 w-48 bg-dark-300 rounded-md shadow-lg z-10">
+            <div className="absolute right-0 mt-2 w-48 bg-dark-300 rounded-md shadow-lg z-20">
               <div className="py-1">
                 <div className="px-4 py-2 text-sm text-gray-300">
                   <div className="font-medium">{user?.name}</div>

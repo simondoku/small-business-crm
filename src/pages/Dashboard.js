@@ -336,35 +336,44 @@ const Dashboard = () => {
     }
   };
 
-  return (
-    <MainLayout 
-      title="Dashboard"
-      onReset={user?.role === 'admin' ? handleReset : undefined}
-    >
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <p className="text-xl text-gray-400">Loading dashboard data...</p>
-        </div>
-      ) : error ? (
-        <div className="bg-red-500 bg-opacity-10 border border-red-500 rounded-lg p-4 mb-4">
-          <p className="text-red-500">{error}</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-6">
+  
+return (
+  <MainLayout 
+    title="Dashboard"
+    onReset={user?.role === 'admin' ? handleReset : undefined}
+  >
+    {loading ? (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-xl text-gray-400">Loading dashboard data...</p>
+      </div>
+    ) : error ? (
+      <div className="bg-red-500 bg-opacity-10 border border-red-500 rounded-lg p-4 mb-4">
+        <p className="text-red-500">{error}</p>
+      </div>
+    ) : (
+      <div className="space-y-6">
+        {/* Full-width Sales Overview on mobile and tablet */}
+        <div className="w-full">
           <SalesOverview 
             data={dashboardData.salesOverview} 
             onPeriodChange={handlePeriodChange} 
           />
+        </div>
+
+        {/* Grid layout that stacks on mobile and becomes 2-column on larger screens */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <TopProducts products={dashboardData.topProducts} />
           <RecentSales sales={dashboardData.recentSales} />
           <SalesTrend 
             data={dashboardData.salesTrend[currentPeriod]} 
             period={currentPeriod} 
           />
+          {/* If you have a fourth panel, it would go here */}
         </div>
-      )}
-    </MainLayout>
-  );
+      </div>
+    )}
+  </MainLayout>
+);
 };
 
 export default Dashboard;
