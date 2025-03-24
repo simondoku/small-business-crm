@@ -1,3 +1,4 @@
+// src/services/productService.js
 import api from './api';
 
 // Get all products
@@ -21,6 +22,12 @@ export const createProduct = async (productData) => {
 // Update product
 export const updateProduct = async (id, productData) => {
   const response = await api.put(`/products/${id}`, productData);
+  return response.data;
+};
+
+// Update product stock only
+export const updateProductStock = async (id, stockData) => {
+  const response = await api.put(`/products/${id}/stock`, stockData);
   return response.data;
 };
 

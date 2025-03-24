@@ -50,7 +50,7 @@ const createCustomer = async (req, res) => {
     });
     
     const savedCustomer = await customer.save();
-    console.log('Customer created:', savedCustomer);
+    //console.log('Customer created:', savedCustomer);
     
     res.status(201).json(savedCustomer);
   } catch (error) {

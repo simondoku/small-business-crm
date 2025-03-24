@@ -8,8 +8,10 @@ import {
   getProducts, 
   createProduct, 
   updateProduct,
+  updateProductStock,
   deleteProduct 
 } from '../services/productService';
+import LoadingScreen from '../components/common/LoadingScreen';
 
 const Products = () => {
   const location = useLocation();
@@ -18,6 +20,7 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [forceRefresh, setForceRefresh] = useState(0);
 
   // Fetch products from API
   useEffect(() => {
@@ -35,7 +38,7 @@ const Products = () => {
     };
 
     fetchProducts();
-  }, []);
+  }, [forceRefresh]);
 
   // Check if we should show the form based on navigation state
   useEffect(() => {
@@ -57,16 +60,22 @@ const Products = () => {
   const handleSave = async (productData) => {
     try {
       if (productData._id) {
-        // Update existing product
-        const updatedProduct = await updateProduct(productData._id, productData);
-        setProducts(products.map(p => 
-          p._id === updatedProduct._id ? updatedProduct : p
-        ));
+        if ('stockAdjustment' in productData && productData.stockAdjustment !== 0) {
+          // Handle stock adjustment
+          await updateProductStock(productData._id, {
+            adjustment: productData.stockAdjustment
+          });
+        } else {
+          // Normal product update
+          await updateProduct(productData._id, productData);
+        }
       } else {
         // Add new product
-        const newProduct = await createProduct(productData);
-        setProducts([...products, newProduct]);
+        await createProduct(productData);
       }
+      
+      // Refresh product list
+      setForceRefresh(prev => prev + 1);
       setShowForm(false);
     } catch (err) {
       console.error('Error saving product:', err);
@@ -78,7 +87,7 @@ const Products = () => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
         await deleteProduct(productId);
-        setProducts(products.filter(p => p._id !== productId));
+        setForceRefresh(prev => prev + 1);
       } catch (err) {
         console.error('Error deleting product:', err);
         alert('Failed to delete product. Please try again.');
@@ -91,16 +100,16 @@ const Products = () => {
     setEditingProduct(null);
   };
 
+  if (loading) {
+    return <LoadingScreen message="Loading products..." />;
+  }
+
   return (
     <MainLayout 
       title="Products" 
       onAddNew={handleAddNew}
     >
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <p className="text-xl text-gray-400">Loading products...</p>
-        </div>
-      ) : error ? (
+      {error ? (
         <div className="bg-red-500 bg-opacity-10 border border-red-500 rounded-lg p-4 mb-4">
           <p className="text-red-500">{error}</p>
         </div>
