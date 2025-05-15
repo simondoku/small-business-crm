@@ -14,6 +14,14 @@ import Register from './pages/Register';
 import Reports from './pages/Reports';
 import ProfilePage from './pages/ProfilePage';
 import UsersPage from './pages/UsersPage';
+import LandingPage from './pages/landing/LandingPage';
+import { useAuth } from './context/AuthContext';
+
+// Wrapper component to handle redirection based on auth state
+const HomeRedirect = () => {
+  const { user } = useAuth();
+  return user ? <Navigate to="/dashboard" /> : <LandingPage />;
+};
 
 function App() {
   return (
@@ -21,11 +29,12 @@ function App() {
       <Router>
         <Routes>
           {/* Public Routes */}
+          <Route path="/" element={<HomeRedirect />} />
           <Route path="/login" element={<Login />} />
           <Route path="/setup" element={<SetupPage />} />
 
           {/* Protected Routes - All Users */}
-          <Route path="/" element={
+          <Route path="/dashboard" element={
             <PrivateRoute>
               <Dashboard />
             </PrivateRoute>
