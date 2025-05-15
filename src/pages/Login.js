@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { LockClosedIcon } from '@heroicons/react/solid';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -15,7 +16,7 @@ const Login = () => {
     // Redirect if already logged in
     useEffect(() => {
         if (user) {
-            navigate('/');
+            navigate('/dashboard');
         }
     }, [user, navigate]);
 
@@ -33,7 +34,7 @@ const Login = () => {
             const result = await login(email, password);
             
             if (result.success) {
-                navigate('/');
+                navigate('/dashboard');
             } else {
                 setError(result.message);
             }
@@ -45,37 +46,52 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-dark-600 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8">
-                <div>
-                    <h1 className="text-center text-3xl font-extrabold text-white">Business CRM</h1>
-                    <h2 className="mt-6 text-center text-xl font-bold text-white">Sign in to your account</h2>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-dark-600 to-dark-500 px-4 sm:px-6 lg:px-8">
+            <Link to="/" className="mb-8 flex items-center">
+                <div className="h-10 w-10 bg-gradient-to-r from-primary-400 to-primary-600 rounded-lg shadow-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-xl">B</span>
                 </div>
+                <span className="ml-2 text-xl font-medium text-white">BusinessCRM</span>
+            </Link>
 
-                {error && (
-                    <div className="bg-red-500 bg-opacity-10 border border-red-500 text-red-500 px-4 py-3 rounded relative" role="alert">
-                        <span className="block sm:inline">{error}</span>
+            <div className="w-full max-w-md">
+                <div className="card p-8 shadow-apple-lg backdrop-blur-sm border border-dark-300 slide-up">
+                    <div className="text-center mb-8">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-500/20 mb-4">
+                            <LockClosedIcon className="h-8 w-8 text-primary" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-white">Sign in</h2>
+                        <p className="text-gray-400 mt-1">Access your account</p>
                     </div>
-                )}
 
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    <div className="rounded-md shadow-sm -space-y-px">
+                    {error && (
+                        <div className="mb-6 bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-3 rounded-lg" role="alert">
+                            <span className="block sm:inline">{error}</span>
+                        </div>
+                    )}
+
+                    <form className="space-y-5" onSubmit={handleSubmit}>
                         <div>
-                            <label htmlFor="email-address" className="sr-only">Email address</label>
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
+                                Email address
+                            </label>
                             <input
-                                id="email-address"
+                                id="email"
                                 name="email"
                                 type="email"
                                 autoComplete="email"
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-dark-300 placeholder-gray-500 text-white bg-dark-300 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                                placeholder="Email address"
+                                className="form-input"
+                                placeholder="you@example.com"
                             />
                         </div>
+                        
                         <div>
-                            <label htmlFor="password" className="sr-only">Password</label>
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
+                                Password
+                            </label>
                             <input
                                 id="password"
                                 name="password"
@@ -84,45 +100,48 @@ const Login = () => {
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-dark-300 placeholder-gray-500 text-white bg-dark-300 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                                placeholder="Password"
+                                className="form-input"
+                                placeholder="••••••••"
                             />
                         </div>
-                    </div>
 
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${loading ? 'bg-purple-700' : 'bg-primary hover:bg-purple-700'
-                                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary`}
-                        >
-                            {loading ? 'Signing in...' : 'Sign in'}
-                        </button>
-                    </div>
+                        <div>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className={`w-full py-2.5 px-4 rounded-lg text-white font-medium 
+                                    ${loading 
+                                        ? 'bg-primary-700 cursor-not-allowed' 
+                                        : 'btn-primary'
+                                    }`}
+                            >
+                                {loading ? 'Signing in...' : 'Sign in'}
+                            </button>
+                        </div>
+                    </form>
 
-                    <div className="text-center">
-                        {!initialized ? (
-                            <div className="bg-primary bg-opacity-10 border border-primary rounded-md p-4 text-center">
-                                <p className="text-white mb-2">Welcome to Business CRM!</p>
-                                <p className="text-sm text-gray-300 mb-3">
-                                    This appears to be your first time using the app. 
-                                    Register now to create an administrator account.
-                                </p>
-                                <Link 
-                                    to="/setup" 
-                                    className="inline-block bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90"
-                                >
-                                    Set Up Your Account
-                                </Link>
-                            </div>
-                        ) : (
-                            <p className="text-sm text-gray-400">
-                                Don't have an account? Contact your administrator.
+                    {!initialized && (
+                        <div className="mt-6 p-4 bg-primary-500/10 border border-primary-500/30 rounded-lg text-center">
+                            <p className="text-white font-medium mb-1">Welcome to BusinessCRM!</p>
+                            <p className="text-sm text-gray-300 mb-3">
+                                This appears to be your first time using the app.
+                                Set up an administrator account to get started.
                             </p>
-                        )}
-                    </div>
-                </form>
+                            <Link 
+                                to="/setup" 
+                                className="inline-block btn btn-primary text-sm"
+                            >
+                                Set Up Your Account
+                            </Link>
+                        </div>
+                    )}
+
+                    {initialized && (
+                        <p className="mt-4 text-center text-sm text-gray-400">
+                            Don't have an account? <Link to="/" className="text-primary-400 hover:text-primary-300">Return to home</Link>
+                        </p>
+                    )}
+                </div>
             </div>
         </div>
     );

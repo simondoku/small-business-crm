@@ -13,7 +13,14 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getUserFeatures } from '../utils/authUtils';
 import LoadingScreen from '../components/common/LoadingScreen';
-import { RefreshIcon, UserAddIcon } from '@heroicons/react/solid';
+import { 
+  RefreshIcon, 
+  UserAddIcon, 
+  ChevronRightIcon,
+  PlusCircleIcon,
+  UserGroupIcon,
+  CubeIcon
+} from '@heroicons/react/outline';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -365,13 +372,64 @@ const Dashboard = () => {
       onReset={userFeatures.resetData ? handleReset : undefined}
     >
       {error ? (
-        <div className="bg-red-500 bg-opacity-10 border border-red-500 rounded-lg p-4 mb-4">
-          <p className="text-red-500">{error}</p>
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6 shadow-sm">
+          <p className="text-red-500 flex items-center">
+            <RefreshIcon className="h-5 w-5 mr-2" />
+            {error}
+          </p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <>
+          {/* Welcome message and quick actions */}
+          <div className="mb-6">
+            <h1 className="text-2xl md:text-3xl font-medium mb-2">Welcome back, {user?.name?.split(' ')[0]}</h1>
+            <p className="text-gray-400">Here's what's happening with your business today</p>
+          </div>
+          
+          {/* Quick action buttons */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <Link 
+              to="/sales" 
+              className="card p-4 flex items-center justify-between hover:shadow-apple-md border border-dark-300/30 transition-all duration-200 hover:border-primary/30 group"
+            >
+              <div className="flex items-center">
+                <div className="w-10 h-10 rounded-full bg-primary-500/20 text-primary-400 flex items-center justify-center mr-3">
+                  <PlusCircleIcon className="w-5 h-5" />
+                </div>
+                <span className="font-medium">New Sale</span>
+              </div>
+              <ChevronRightIcon className="w-5 h-5 text-gray-500 group-hover:text-primary transition-colors" />
+            </Link>
+            
+            <Link 
+              to="/customers" 
+              className="card p-4 flex items-center justify-between hover:shadow-apple-md border border-dark-300/30 transition-all duration-200 hover:border-primary/30 group"
+            >
+              <div className="flex items-center">
+                <div className="w-10 h-10 rounded-full bg-primary-500/20 text-primary-400 flex items-center justify-center mr-3">
+                  <UserGroupIcon className="w-5 h-5" />
+                </div>
+                <span className="font-medium">Manage Customers</span>
+              </div>
+              <ChevronRightIcon className="w-5 h-5 text-gray-500 group-hover:text-primary transition-colors" />
+            </Link>
+            
+            <Link 
+              to="/products" 
+              className="card p-4 flex items-center justify-between hover:shadow-apple-md border border-dark-300/30 transition-all duration-200 hover:border-primary/30 group"
+            >
+              <div className="flex items-center">
+                <div className="w-10 h-10 rounded-full bg-primary-500/20 text-primary-400 flex items-center justify-center mr-3">
+                  <CubeIcon className="w-5 h-5" />
+                </div>
+                <span className="font-medium">Manage Products</span>
+              </div>
+              <ChevronRightIcon className="w-5 h-5 text-gray-500 group-hover:text-primary transition-colors" />
+            </Link>
+          </div>
+
           {/* Full-width Sales Overview on mobile and tablet */}
-          <div className="w-full">
+          <div className="w-full mb-8">
             <SalesOverview 
               data={dashboardData.salesOverview} 
               onPeriodChange={handlePeriodChange} 
@@ -379,42 +437,65 @@ const Dashboard = () => {
           </div>
 
           {/* Grid layout that stacks on mobile and becomes 2-column on larger screens */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <TopProducts products={dashboardData.topProducts} />
-            <RecentSales sales={dashboardData.recentSales} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <SalesTrend 
               data={dashboardData.salesTrend[currentPeriod]} 
               period={currentPeriod} 
             />
+            <TopProducts products={dashboardData.topProducts} />
+            <RecentSales sales={dashboardData.recentSales} />
             
-            {/* Admin-only feature example */}
+            {/* Admin-only feature section */}
             {userFeatures.userManagement && (
-              <div className="bg-dark-400 rounded-lg p-4">
-                <h2 className="text-lg font-medium mb-4">Admin Actions</h2>
-                <div className="space-y-2">
+              <div className="card shadow-apple border border-dark-300/30">
+                <div className="p-5 flex items-center border-b border-dark-300/20">
+                  <UserAddIcon className="h-5 w-5 text-primary-400 mr-2" />
+                  <h2 className="text-lg font-medium">Admin Actions</h2>
+                </div>
+                <div className="p-5 space-y-3">
                   <Link 
                     to="/register"
-                    className="block w-full bg-primary bg-opacity-20 text-primary p-3 rounded-lg hover:bg-opacity-30 transition-colors"
+                    className="group flex items-center justify-between p-3 bg-dark-300/30 rounded-xl hover:bg-dark-300/50 transition-all duration-200"
                   >
                     <div className="flex items-center">
-                      <UserAddIcon className="h-5 w-5 mr-2" />
-                      <span>Add New Staff Member</span>
+                      <div className="w-10 h-10 rounded-full bg-primary-500/20 text-primary-400 flex items-center justify-center mr-3">
+                        <UserAddIcon className="w-5 h-5" />
+                      </div>
+                      <span className="font-medium">Add New Staff</span>
                     </div>
+                    <ChevronRightIcon className="w-5 h-5 text-gray-500 group-hover:text-primary transition-colors" />
                   </Link>
+                  
+                  <Link 
+                    to="/users"
+                    className="group flex items-center justify-between p-3 bg-dark-300/30 rounded-xl hover:bg-dark-300/50 transition-all duration-200"
+                  >
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 rounded-full bg-primary-500/20 text-primary-400 flex items-center justify-center mr-3">
+                        <UserGroupIcon className="w-5 h-5" />
+                      </div>
+                      <span className="font-medium">Manage Users</span>
+                    </div>
+                    <ChevronRightIcon className="w-5 h-5 text-gray-500 group-hover:text-primary transition-colors" />
+                  </Link>
+                  
                   <button
                     onClick={handleReset}
-                    className="block w-full bg-red-500 bg-opacity-20 text-red-500 p-3 rounded-lg hover:bg-opacity-30 transition-colors"
+                    className="group flex items-center justify-between p-3 w-full text-left bg-red-500/10 rounded-xl hover:bg-red-500/20 transition-colors"
                   >
                     <div className="flex items-center">
-                      <RefreshIcon className="h-5 w-5 mr-2" />
-                      <span>Reset Dashboard Data</span>
+                      <div className="w-10 h-10 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center mr-3">
+                        <RefreshIcon className="w-5 h-5" />
+                      </div>
+                      <span className="font-medium text-red-400">Reset Dashboard Data</span>
                     </div>
+                    <ChevronRightIcon className="w-5 h-5 text-red-400/70 transition-colors" />
                   </button>
                 </div>
               </div>
             )}
           </div>
-        </div>
+        </>
       )}
     </MainLayout>
   );

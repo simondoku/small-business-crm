@@ -37,9 +37,11 @@ const Tooltip = ({ children, content, position = 'left' }) => {
   }, [isVisible]);
 
   return (
-    <div className="relative inline-block" ref={tooltipRef}>
+    <div className="relative inline-block tooltip-container" ref={tooltipRef}>
       <div 
         onClick={() => setIsVisible(!isVisible)}
+        onMouseEnter={() => setIsVisible(true)}
+        onMouseLeave={() => setIsVisible(false)}
         className="cursor-pointer"
       >
         {children}
@@ -47,9 +49,17 @@ const Tooltip = ({ children, content, position = 'left' }) => {
       
       {isVisible && (
         <div 
-          className={`absolute z-50 ${getPositionClasses()} w-64 p-3 bg-dark-200 text-white text-sm rounded-lg shadow-lg`}
+          className={`absolute z-50 ${getPositionClasses()} w-64 p-4 bg-dark-300/95 backdrop-blur-md text-white text-sm rounded-xl shadow-apple-md border border-dark-200/30 animate-fadeIn`}
         >
           {content}
+          
+          {/* Arrow for tooltip direction indicator */}
+          <div className={`absolute ${
+            position === 'bottom' ? 'top-0 left-1/2 -translate-x-1/2 -translate-y-2 border-b-0 border-l-8 border-r-8 border-t-8 border-t-dark-300/95 border-l-transparent border-r-transparent' :
+            position === 'top' ? 'bottom-0 left-1/2 -translate-x-1/2 translate-y-2 border-t-0 border-l-8 border-r-8 border-b-8 border-b-dark-300/95 border-l-transparent border-r-transparent' : 
+            position === 'right' ? 'left-0 top-1/2 -translate-x-2 -translate-y-1/2 border-r-0 border-t-8 border-b-8 border-l-8 border-l-dark-300/95 border-t-transparent border-b-transparent' :
+            'right-0 top-1/2 translate-x-2 -translate-y-1/2 border-l-0 border-t-8 border-b-8 border-r-8 border-r-dark-300/95 border-t-transparent border-b-transparent'
+          } w-0 h-0`}></div>
         </div>
       )}
     </div>
