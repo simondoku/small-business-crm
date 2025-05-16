@@ -7,6 +7,7 @@ const ProductForm = ({ product = null, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
     name: '',
     category: '',
+    description: '',
     sku: '',
     price: '',
     stock: '',
@@ -40,6 +41,7 @@ const ProductForm = ({ product = null, onSave, onCancel }) => {
         _id: product._id, // Include MongoDB _id
         name: product.name || '',
         category: product.category || '',
+        description: product.description || '',
         sku: product.sku || '',
         price: product.price ? product.price.toString() : '',
         stock: product.stock ? product.stock.toString() : '',
@@ -256,6 +258,31 @@ const ProductForm = ({ product = null, onSave, onCancel }) => {
                       onBlur={() => setFocusedField(null)}
                       className="w-full pt-6 pb-2 px-3 bg-transparent text-white focus:outline-none"
                       required
+                    />
+                  </div>
+                </div>
+
+                <div className="mb-5">
+                  <div className={`relative border ${
+                    focusedField === 'description' 
+                      ? 'border-primary' 
+                      : 'border-dark-300/50'
+                  } rounded-xl bg-dark-300/30 transition-all duration-200`}>
+                    <label className={`absolute left-3 transition-all duration-200 pointer-events-none ${
+                      formData.description || focusedField === 'description'
+                        ? 'text-xs top-1.5 text-primary'
+                        : 'text-sm top-3.5 text-gray-400'
+                    }`}>
+                      Product Description
+                    </label>
+                    <textarea
+                      name="description"
+                      id="description"
+                      value={formData.description}
+                      onChange={handleChange}
+                      onFocus={() => setFocusedField('description')}
+                      onBlur={() => setFocusedField(null)}
+                      className="w-full pt-6 pb-2 px-3 bg-transparent text-white focus:outline-none"
                     />
                   </div>
                 </div>
