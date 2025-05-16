@@ -427,39 +427,42 @@ const Reports = () => {
   return (
     <MainLayout title="Reports">
       <div className="mb-6">
-        <div className="flex space-x-4 mb-4">
-          <button
-            onClick={() => setReportType('sales')}
-            className={`px-4 py-2 rounded-md ${
-              reportType === 'sales' ? 'bg-primary text-white' : 'bg-dark-300 text-white'
-            }`}
-          >
-            Sales Report
-          </button>
-          <button
-            onClick={() => setReportType('analytics')}
-            className={`px-4 py-2 rounded-md ${
-              reportType === 'analytics' ? 'bg-primary text-white' : 'bg-dark-300 text-white'
-            }`}
-          >
-            Analytics
-          </button>
-          <button
-            onClick={() => setReportType('customers')}
-            className={`px-4 py-2 rounded-md ${
-              reportType === 'customers' ? 'bg-primary text-white' : 'bg-dark-300 text-white'
-            }`}
-          >
-            Customers
-          </button>
-          <button
-            onClick={() => setReportType('products')}
-            className={`px-4 py-2 rounded-md ${
-              reportType === 'products' ? 'bg-primary text-white' : 'bg-dark-300 text-white'
-            }`}
-          >
-            Products
-          </button>
+        {/* Wrap tabs in a scrollable container */}
+        <div className="overflow-x-auto pb-2 no-scrollbar">
+          <div className="flex space-x-4 mb-4 min-w-max">
+            <button
+              onClick={() => setReportType('sales')}
+              className={`px-4 py-2 rounded-md ${
+                reportType === 'sales' ? 'bg-primary text-white' : 'bg-dark-300 text-white'
+              }`}
+            >
+              Sales Report
+            </button>
+            <button
+              onClick={() => setReportType('analytics')}
+              className={`px-4 py-2 rounded-md ${
+                reportType === 'analytics' ? 'bg-primary text-white' : 'bg-dark-300 text-white'
+              }`}
+            >
+              Analytics
+            </button>
+            <button
+              onClick={() => setReportType('customers')}
+              className={`px-4 py-2 rounded-md ${
+                reportType === 'customers' ? 'bg-primary text-white' : 'bg-dark-300 text-white'
+              }`}
+            >
+              Customers
+            </button>
+            <button
+              onClick={() => setReportType('products')}
+              className={`px-4 py-2 rounded-md ${
+                reportType === 'products' ? 'bg-primary text-white' : 'bg-dark-300 text-white'
+              }`}
+            >
+              Products
+            </button>
+          </div>
         </div>
         
         <DateRangePicker onDateChange={handleDateChange} />

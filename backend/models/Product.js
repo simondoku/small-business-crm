@@ -11,6 +11,11 @@ const productSchema = mongoose.Schema(
       type: String,
       required: false,
     },
+    description: {
+      type: String,
+      required: false,
+      default: '',
+    },
     sku: {
       type: String,
       required: false,
