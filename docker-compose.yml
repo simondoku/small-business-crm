@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # MongoDB service
+  mongodb:
+    image: mongo:5.0
+    container_name: crm-mongodb
+    restart: unless-stopped
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-secret}
+    networks:
+      - crm-network
+    # Limit resource usage in production
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # Backend API service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: small-business-crm:latest
+    container_name: crm-api
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    ports:
+      - "${PORT:-5002}:${PORT:-5002}"
+    environment:
+      - NODE_ENV=production
+      - PORT=${PORT:-5002}
+      - MONGO_URI=mongodb://${MONGO_USERNAME:-admin}:${MONGO_PASSWORD:-secret}@mongodb:27017/crm?authSource=admin
+      - JWT_SECRET=${JWT_SECRET:-YourSuperSecretKeyHere}
+      - JWT_EXPIRE=${JWT_EXPIRE:-30d}
+    networks:
+      - crm-network
+    # Memory and CPU limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # Nginx service for production
+  nginx:
+    image: nginx:alpine
+    container_name: crm-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./build:/usr/share/nginx/html:ro
+    depends_on:
+      - api
+    networks:
+      - crm-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
+networks:
+  crm-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
