@@ -8,9 +8,11 @@ import { getProducts } from '../services/productService';
 import { getCustomers, createCustomer } from '../services/customerService';
 import { createSale } from '../services/salesService';
 import { ExclamationIcon } from '@heroicons/react/solid';
+import { useFocus } from '../context/FocusContext';
 
 const NewSale = () => {
   const navigate = useNavigate();
+  const { focusMode, enterFocusMode } = useFocus();
   const [saleItems, setSaleItems] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [comments, setComments] = useState('');
@@ -174,6 +176,20 @@ const NewSale = () => {
       alert(`Failed to complete sale: ${errorMsg}`);
     }
   };
+
+  // Auto-enter focus mode when entering the NewSale page
+  useEffect(() => {
+    // Only suggest focus mode when starting a transaction
+    if (!focusMode && saleItems.length > 0) {
+      const suggestFocusMode = () => {
+        if (window.confirm('Would you like to enter focus mode for this transaction?')) {
+          enterFocusMode();
+        }
+      };
+      
+      suggestFocusMode();
+    }
+  }, [focusMode, saleItems.length, enterFocusMode]);
   
   return (
     <MainLayout title="New Sale">
@@ -227,6 +243,7 @@ const NewSale = () => {
             onCompleteSale={handleCompleteSale}
             loading={loading}
             error={error}
+            focusMode={focusMode}
           />
         </>
       )}
