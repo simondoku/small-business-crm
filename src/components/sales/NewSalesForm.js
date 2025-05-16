@@ -17,13 +17,14 @@ const NewSaleForm = ({
   onCommentsChange,
   onCompleteSale,
   loading,
-  error
+  error,
+  focusMode
 }) => {
   const [activeTab, setActiveTab] = useState('products'); // 'products' or 'cart'
 
   // For mobile, show tabs to switch between product selection and cart
   const renderMobileView = () => (
-    <div className="h-[calc(100vh-120px)] flex flex-col">
+    <div className="h-[calc(100vh-160px)] flex flex-col">
       {/* Tab navigation */}
       <div className="flex bg-dark-400 rounded-t-lg mb-1">
         <button
@@ -52,9 +53,12 @@ const NewSaleForm = ({
             products={products}
             onSelectProduct={(product) => {
               onSelectProduct(product);
-              // Optionally switch to cart view after adding a product
-              // setActiveTab('cart');
+              // In focus mode, switch to cart after adding a product
+              if (focusMode) {
+                setActiveTab('cart');
+              }
             }}
+            focusMode={focusMode}
           />
         ) : (
           <SaleDetails 
@@ -68,36 +72,51 @@ const NewSaleForm = ({
             customers={customers}
             comments={comments}
             onCommentsChange={onCommentsChange}
+            focusMode={focusMode}
           />
         )}
       </div>
     </div>
   );
 
-  // Desktop view remains a side-by-side layout
+  // Desktop view - focus mode changes layout to emphasize the active transaction
   const renderDesktopView = () => (
-    <div className="grid grid-cols-2 gap-6 h-[calc(100vh-120px)]">
-      <ProductSelector 
-        products={products}
-        onSelectProduct={onSelectProduct}
-      />
-      <SaleDetails 
-        saleItems={saleItems}
-        onUpdateQuantity={onUpdateQuantity}
-        onRemoveItem={onRemoveItem}
-        onCompleteSale={onCompleteSale}
-        customer={selectedCustomer}
-        onSelectCustomer={onSelectCustomer}
-        onNewCustomer={onNewCustomer}
-        customers={customers}
-        comments={comments}
-        onCommentsChange={onCommentsChange}
-      />
+    <div className={`${focusMode ? 'grid-cols-3' : 'grid-cols-2'} grid gap-6 h-[calc(100vh-160px)]`}>
+      <div className={focusMode ? 'col-span-1' : 'col-span-1'}>
+        <ProductSelector 
+          products={products}
+          onSelectProduct={onSelectProduct}
+          focusMode={focusMode}
+        />
+      </div>
+      <div className={focusMode ? 'col-span-2' : 'col-span-1'}>
+        <SaleDetails 
+          saleItems={saleItems}
+          onUpdateQuantity={onUpdateQuantity}
+          onRemoveItem={onRemoveItem}
+          onCompleteSale={onCompleteSale}
+          customer={selectedCustomer}
+          onSelectCustomer={onSelectCustomer}
+          onNewCustomer={onNewCustomer}
+          customers={customers}
+          comments={comments}
+          onCommentsChange={onCommentsChange}
+          focusMode={focusMode}
+        />
+      </div>
     </div>
   );
 
   return (
     <>
+      {/* Focus mode indicator */}
+      {focusMode && (
+        <div className="mb-4 bg-primary bg-opacity-10 border border-primary rounded-lg p-4 flex items-center animate-pulse">
+          <span className="mr-2 h-3 w-3 bg-primary rounded-full"></span>
+          <p className="text-primary font-medium">Focus Mode Active - Streamlined for efficient transactions</p>
+        </div>
+      )}
+      
       {/* Mobile view */}
       <div className="md:hidden">
         {renderMobileView()}
