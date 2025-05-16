@@ -1,20 +1,55 @@
 // src/services/api.js
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5002/api';
+// Use environment variables for API URL to support different environments
+// For Vercel deployments, relative URLs will work when deployed together
+const API_URL = process.env.REACT_APP_API_URL || '/api';
+
+// Simple in-memory cache for GET requests
+const cache = new Map();
+const CACHE_DURATION = process.env.REACT_APP_CACHE_DURATION ? 
+  parseInt(process.env.REACT_APP_CACHE_DURATION) : 5 * 60 * 1000; // 5 minutes by default
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  // Set reasonable timeouts for production
+  timeout: 10000, // 10 seconds
 });
 
 // Add response interceptor for error handling
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  (response) => {
+    // Cache successful GET responses
+    if (response.config.method === 'get' && response.config.cache !== false) {
+      const cacheKey = getCacheKey(response.config);
+      cache.set(cacheKey, {
+        data: response.data,
+        timestamp: Date.now(),
+      });
+    }
+    return response;
+  },
+  async (error) => {
     const originalRequest = error.config;
+    
+    // Implement retry logic for network errors or 5xx server errors
+    if ((error.code === 'ECONNABORTED' || 
+        (error.response && error.response.status >= 500)) && 
+        !originalRequest._retry && 
+        originalRequest.method !== 'post') {
+      
+      originalRequest._retry = true;
+      originalRequest.retryCount = (originalRequest.retryCount || 0) + 1;
+      
+      if (originalRequest.retryCount <= 2) { // Maximum 2 retries
+        const backoffDelay = originalRequest.retryCount * 1000; // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, backoffDelay));
+        return api(originalRequest);
+      }
+    }
     
     // Handle token expiration
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
@@ -50,9 +85,81 @@ api.interceptors.request.use(
       config.headers['Authorization'] = `Bearer ${user.token}`;
     }
     
+    // Check cache for GET requests unless caching is disabled
+    if (config.method === 'get' && config.cache !== false) {
+      const cacheKey = getCacheKey(config);
+      const cachedResponse = cache.get(cacheKey);
+      
+      if (cachedResponse && Date.now() - cachedResponse.timestamp < CACHE_DURATION) {
+        // Return cached data as a resolved promise
+        return {
+          ...config,
+          adapter: () => {
+            return Promise.resolve({
+              data: cachedResponse.data,
+              status: 200,
+              statusText: 'OK',
+              headers: {},
+              config,
+              cached: true
+            });
+          }
+        };
+      }
+    }
+
+    // Add a timestamp to prevent caching by the browser in production
+    if (process.env.NODE_ENV === 'production' && config.method === 'get') {
+      config.params = { ...config.params, _t: Date.now() };
+    }
+    
     return config;
   },
   (error) => Promise.reject(error)
 );
+
+// Helper function to generate cache keys
+function getCacheKey(config) {
+  return `${config.url}|${JSON.stringify(config.params || {})}`;
+}
+
+// Function to clear cache
+export const clearApiCache = () => {
+  cache.clear();
+};
+
+// Function to clear specific cache entry
+export const clearApiCacheFor = (url) => {
+  for (let key of cache.keys()) {
+    if (key.startsWith(url)) {
+      cache.delete(key);
+    }
+  }
+};
+
+// Add compression for production
+if (process.env.NODE_ENV === 'production') {
+  api.defaults.headers['Accept-Encoding'] = 'gzip, deflate, br';
+}
+
+// Add special configuration for Vercel deployment
+// Detect if we're in a Vercel production environment
+const isVercelProduction = process.env.VERCEL === '1' && process.env.NODE_ENV === 'production';
+
+if (isVercelProduction) {
+  // Add a timestamp to all GET requests to avoid CDN caching issues in Vercel
+  api.interceptors.request.use(config => {
+    if (config.method === 'get') {
+      config.params = {
+        ...config.params,
+        _v: Date.now() // Vercel-specific cache buster
+      };
+    }
+    return config;
+  });
+  
+  // Set more aggressive caching for Vercel's serverless functions
+  api.defaults.headers.common['Cache-Control'] = 'public, max-age=30, stale-while-revalidate=300';
+}
 
 export default api;

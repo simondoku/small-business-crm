@@ -102,4 +102,9 @@ module.exports = {
       strategy: 'class',
     }),
   ],
+  // Production optimizations
+  future: {
+    removeDeprecatedGapUtilities: true,
+    purgeLayersByDefault: true,
+  },
 }

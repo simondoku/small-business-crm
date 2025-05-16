@@ -1,5 +1,5 @@
 // src/components/sales/NewSaleForm.js
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import ProductSelector from './ProductSelector';
 import SaleDetails from './SaleDetails';
 
@@ -22,6 +22,19 @@ const NewSaleForm = ({
 }) => {
   const [activeTab, setActiveTab] = useState('products'); // 'products' or 'cart'
 
+  // Memoize handler functions to prevent unnecessary rerenders
+  const handleTabChange = useCallback((tab) => {
+    setActiveTab(tab);
+  }, []);
+
+  const handleProductSelect = useCallback((product) => {
+    onSelectProduct(product);
+    // In focus mode, switch to cart after adding a product
+    if (focusMode) {
+      setActiveTab('cart');
+    }
+  }, [onSelectProduct, focusMode]);
+
   // For mobile, show tabs to switch between product selection and cart
   const renderMobileView = () => (
     <div className="h-[calc(100vh-160px)] flex flex-col">
@@ -29,13 +42,13 @@ const NewSaleForm = ({
       <div className="flex bg-dark-400 rounded-t-lg mb-1">
         <button
           className={`flex-1 py-3 text-center ${activeTab === 'products' ? 'bg-primary text-white' : 'text-gray-400'}`}
-          onClick={() => setActiveTab('products')}
+          onClick={() => handleTabChange('products')}
         >
           Select Products
         </button>
         <button
           className={`flex-1 py-3 text-center ${activeTab === 'cart' ? 'bg-primary text-white' : 'text-gray-400'} relative`}
-          onClick={() => setActiveTab('cart')}
+          onClick={() => handleTabChange('cart')}
         >
           Cart
           {saleItems.length > 0 && (
@@ -51,13 +64,7 @@ const NewSaleForm = ({
         {activeTab === 'products' ? (
           <ProductSelector 
             products={products}
-            onSelectProduct={(product) => {
-              onSelectProduct(product);
-              // In focus mode, switch to cart after adding a product
-              if (focusMode) {
-                setActiveTab('cart');
-              }
-            }}
+            onSelectProduct={handleProductSelect}
             focusMode={focusMode}
           />
         ) : (
@@ -130,4 +137,5 @@ const NewSaleForm = ({
   );
 };
 
-export default NewSaleForm;
+// Export with memo to prevent unnecessary re-rendering
+export default memo(NewSaleForm);

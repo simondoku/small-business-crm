@@ -10,6 +10,7 @@ import {
   ChevronUpIcon
 } from '@heroicons/react/solid';
 import { ViewListIcon, ViewGridIcon } from '@heroicons/react/outline';
+import OptimizedImage from '../common/OptimizedImage';
 
 const ProductList = ({ products = [], onEdit, onDelete }) => {
   const [viewMode, setViewMode] = useState('grid'); // 'table' or 'grid'
@@ -95,7 +96,11 @@ const ProductList = ({ products = [], onEdit, onDelete }) => {
                       <div className="flex items-center">
                         <div className="h-10 w-10 flex-shrink-0 bg-dark-200/80 rounded-lg overflow-hidden border border-dark-200/30">
                           {product.image ? (
-                            <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                            <OptimizedImage 
+                              src={product.image} 
+                              alt={product.name} 
+                              className="h-full w-full object-cover"
+                            />
                           ) : (
                             <div className="h-full w-full flex items-center justify-center">
                               <span className="text-gray-500 text-xs">No img</span>
@@ -222,7 +227,12 @@ const ProductList = ({ products = [], onEdit, onDelete }) => {
             >
               <div className="h-40 bg-dark-300/50 relative">
                 {product.image ? (
-                  <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                  <OptimizedImage 
+                    src={product.image} 
+                    alt={product.name} 
+                    className="h-full w-full object-cover"
+                    fallbackSrc="/placeholder-product.png"
+                  />
                 ) : (
                   <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-dark-200/20 to-dark-300/50">
                     <span className="text-gray-400 text-sm">{product.name.charAt(0).toUpperCase()}</span>
