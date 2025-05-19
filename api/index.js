@@ -45,8 +45,23 @@ app.use(helmet());
 // Compression middleware
 app.use(compression());
 
+// CORS configuration with allowed domains
+const corsOptions = {
+  origin: [
+    'https://www.bcrm.dev',
+    'https://bcrm.dev',
+    // Include Vercel deployment URLs as fallbacks
+    'https://businesscrm-d9td6uxqg-simons-projects-94c78eac.vercel.app',
+    // Allow localhost for development
+    'http://localhost:3000'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 
 // API Routes
