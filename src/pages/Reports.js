@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import MainLayout from '../components/layout/MainLayout';
 import DateRangePicker from '../components/common/DateRangePicker';
+import SalesActivityHeatmap from '../components/analytics/SalesActivityHeatmap';
 import { getSales } from '../services/salesService';
 import { getCustomers } from '../services/customerService';
 import { getProducts } from '../services/productService';
@@ -233,91 +234,100 @@ const Reports = () => {
         };
         
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-dark-400 rounded-lg overflow-hidden">
-              <div className="p-4">
-                <h2 className="text-lg font-medium mb-4">Monthly Revenue</h2>
-                <div className="h-64">
-                  <Line
-                    key={`line-revenue-${reportType}-${dateRange.startDate}`}
-                    data={monthlySalesData}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      scales: {
-                        y: {
-                          beginAtZero: true,
-                          grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                          ticks: { color: '#888888' }
-                        },
-                        x: {
-                          grid: { display: false },
-                          ticks: { color: '#888888' }
+          <div className="space-y-6">
+            {/* Sales Activity Heatmap - Full width */}
+            <div className="bg-dark-400 rounded-lg overflow-hidden p-4">
+              <h2 className="text-lg font-medium mb-2">Sales Activity</h2>
+              <SalesActivityHeatmap salesData={salesData} />
+            </div>
+            
+            {/* Other charts - Grid layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-dark-400 rounded-lg overflow-hidden">
+                <div className="p-4">
+                  <h2 className="text-lg font-medium mb-4">Monthly Revenue</h2>
+                  <div className="h-64">
+                    <Line
+                      key={`line-revenue-${reportType}-${dateRange.startDate}`}
+                      data={monthlySalesData}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                          y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#888888' }
+                          },
+                          x: {
+                            grid: { display: false },
+                            ticks: { color: '#888888' }
+                          }
                         }
-                      }
-                    }}
-                  />
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-dark-400 rounded-lg overflow-hidden">
-              <div className="p-4">
-                <h2 className="text-lg font-medium mb-4">Sales Performance</h2>
-                <div className="h-64">
-                  <Bar
-                    key={`bar-${reportType}-${dateRange.startDate}`}
-                    data={{
-                      labels: ['Last 7 Days', 'Last 30 Days', 'Last 90 Days'],
-                      datasets: [
-                        {
-                          label: 'Sales Count',
-                          data: [
-                            salesData.filter(sale => new Date(sale.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length,
-                            salesData.filter(sale => new Date(sale.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length,
-                            salesData.filter(sale => new Date(sale.createdAt) > new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)).length
-                          ],
-                          backgroundColor: '#8860e6'
+              <div className="bg-dark-400 rounded-lg overflow-hidden">
+                <div className="p-4">
+                  <h2 className="text-lg font-medium mb-4">Sales Performance</h2>
+                  <div className="h-64">
+                    <Bar
+                      key={`bar-${reportType}-${dateRange.startDate}`}
+                      data={{
+                        labels: ['Last 7 Days', 'Last 30 Days', 'Last 90 Days'],
+                        datasets: [
+                          {
+                            label: 'Sales Count',
+                            data: [
+                              salesData.filter(sale => new Date(sale.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length,
+                              salesData.filter(sale => new Date(sale.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length,
+                              salesData.filter(sale => new Date(sale.createdAt) > new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)).length
+                            ],
+                            backgroundColor: '#8860e6'
+                          }
+                        ]
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                          y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { color: '#888888' }
+                          },
+                          x: {
+                            grid: { display: false },
+                            ticks: { color: '#888888' }
+                          }
                         }
-                      ]
-                    }}
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="bg-dark-400 rounded-lg overflow-hidden">
+                <div className="p-4">
+                  <h2 className="text-lg font-medium mb-4">Sales by Category</h2>
+                  <div className="h-64">                              
+                  <Pie
+                    key={`pie-${reportType}-${dateRange.startDate}`} 
+                    data={categoryData}
                     options={{
                       responsive: true,
                       maintainAspectRatio: false,
-                      scales: {
-                        y: {
-                          beginAtZero: true,
-                          grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                          ticks: { color: '#888888' }
-                        },
-                        x: {
-                          grid: { display: false },
-                          ticks: { color: '#888888' }
+                      plugins: {
+                        legend: {
+                          position: 'bottom',
+                          labels: { color: '#ffffff' }
                         }
                       }
                     }}
                   />
-                </div>
-              </div>
-            </div>
-            <div className="bg-dark-400 rounded-lg overflow-hidden">
-              <div className="p-4">
-                <h2 className="text-lg font-medium mb-4">Sales by Category</h2>
-                <div className="h-64">                              
-                <Pie
-                  key={`pie-${reportType}-${dateRange.startDate}`} 
-                  data={categoryData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        position: 'bottom',
-                        labels: { color: '#ffffff' }
-                      }
-                    }
-                  }}
-                />
+                  </div>
                 </div>
               </div>
             </div>
