@@ -10,6 +10,13 @@ A comprehensive Customer Relationship Management system for small businesses. Th
 - **Sales Management**: Create sales transactions and link them to customers
 - **User Authentication**: Secure login with admin and staff roles
 - **Data Analysis**: View sales trends and top products
+- **Category Management**: Organize products by categories for better inventory control
+- **Advanced Analytics**: Visualize sales activity with heatmaps and detailed reports
+- **Focus Mode**: Streamlined interface for faster sales processing
+- **Subscription Plans**: Free and Premium tiers with different feature sets
+- **Admin Controls**: Reset dashboard data and manage user access
+- **Payment Methods**: Support for both cash and card transactions
+- **Stock Warnings**: Get alerts for low or insufficient inventory
 
 ## Technology Stack
 
@@ -192,17 +199,20 @@ This deployment includes production optimizations:
 ### Dashboard
 
 The dashboard provides an overview of your business with:
-- Sales metrics
-- Top-selling products
-- Recent transactions
-- Sales trends
+- Sales metrics (revenue, transactions, average sale, new customers)
+- Top-selling products with quantity tracking
+- Recent transactions with customer details
+- Sales trends visualized by day, week, month and year
+- Admin controls for system management
 
 ### Products
 
 Manage your product catalog:
 - Add new products with name, price, and stock quantities
+- Organize products using categories for better inventory management
 - Edit existing products
-- Remove products from your inventory
+- Track stock levels with automatic warnings for low inventory
+- Filter products by category for easier navigation
 
 ### Customers
 
@@ -210,14 +220,35 @@ Maintain your customer database:
 - Add customer contact information
 - View purchase history
 - Track total purchases and customer value
+- Quick add customers during sales process
 
 ### Sales
 
 Record sales transactions:
-- Select products from your catalog
-- Add quantities
-- Link to existing customers or add new ones
-- Complete sales with automatic timestamps
+- Select products from your catalog with real-time stock checking
+- Add quantities with automatic inventory management
+- Use Focus Mode for streamlined checkout experiences
+- Link to existing customers or add new ones during checkout
+- Support for both cash and card payment methods
+- Add transaction notes and comments
+- Receive alerts for low stock during sales process
+
+### Reports
+
+Generate detailed business reports:
+- Sales activity heatmaps showing transaction patterns
+- Monthly revenue trends and performance metrics
+- Sales breakdowns by product category
+- Customer purchase analysis
+- Export reports to PDF or Excel format
+
+### Advanced Analytics
+
+Gain insights with visual analytics:
+- Sales activity heatmaps showing patterns over time
+- Category distribution analysis
+- Monthly trend analysis
+- Performance comparisons across time periods
 
 ## Troubleshooting
 
