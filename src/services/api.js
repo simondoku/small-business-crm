@@ -148,11 +148,6 @@ export const clearApiCacheFor = (url) => {
   }
 };
 
-// Add compression for production
-if (process.env.NODE_ENV === 'production') {
-  api.defaults.headers['Accept-Encoding'] = 'gzip, deflate, br';
-}
-
 // Add special configuration for Vercel deployment
 // Detect if we're in a Vercel production environment
 const isVercelProduction = process.env.VERCEL === '1' && process.env.NODE_ENV === 'production';
@@ -168,9 +163,6 @@ if (isVercelProduction) {
     }
     return config;
   });
-  
-  // Set more aggressive caching for Vercel's serverless functions
-  api.defaults.headers.common['Cache-Control'] = 'public, max-age=30, stale-while-revalidate=300';
 }
 
 export default api;

@@ -28,10 +28,24 @@ module.exports = override(
           }],
         };
         
-        postcss.options.plugins = (plugins) => [
-          ...plugins,
-          require('cssnano')(cssnanoOptions),
-        ];
+        // Updated for compatibility with newer PostCSS loader
+        if (!postcss.options.postcssOptions) {
+          postcss.options.postcssOptions = {};
+        }
+        
+        if (!postcss.options.postcssOptions.plugins) {
+          postcss.options.postcssOptions.plugins = [];
+        }
+        
+        if (Array.isArray(postcss.options.postcssOptions.plugins)) {
+          postcss.options.postcssOptions.plugins.push(require('cssnano')(cssnanoOptions));
+        } else {
+          const existingPlugins = postcss.options.postcssOptions.plugins || {};
+          postcss.options.postcssOptions.plugins = [
+            ...Object.values(existingPlugins),
+            require('cssnano')(cssnanoOptions)
+          ];
+        }
       }
     }
   }),
