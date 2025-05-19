@@ -120,13 +120,18 @@ const Reports = () => {
   };
 
   // Handle export to Excel
-  const handleExportExcel = () => {
-    if (reportType === 'sales') {
-      const formattedData = formatSalesForExport(salesData);
-      exportToExcel(formattedData, 'Sales', 'sales_report.xlsx');
-    } else if (reportType === 'customers') {
-      const formattedData = formatCustomersForExport(customersData);
-      exportToExcel(formattedData, 'Customers', 'customer_report.xlsx');
+  const handleExportExcel = async () => {
+    try {
+      if (reportType === 'sales') {
+        const formattedData = formatSalesForExport(salesData);
+        await exportToExcel(formattedData, 'Sales', 'sales_report.xlsx');
+      } else if (reportType === 'customers') {
+        const formattedData = formatCustomersForExport(customersData);
+        await exportToExcel(formattedData, 'Customers', 'customer_report.xlsx');
+      }
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      setError('Failed to export Excel file. Please try again.');
     }
   };
 

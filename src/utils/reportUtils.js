@@ -1,8 +1,8 @@
 // src/utils/reportUtils.js
-// Import jsPDF and xlsx
+// Import jsPDF and exceljs
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 // Export data as PDF
 export const exportToPDF = (title, headers, data, filename = 'report.pdf') => {
@@ -40,12 +40,60 @@ export const exportToPDF = (title, headers, data, filename = 'report.pdf') => {
   doc.save(filename);
 };
 
-// Export data as Excel
-export const exportToExcel = (data, sheetName = 'Sheet1', filename = 'report.xlsx') => {
-  const worksheet = XLSX.utils.json_to_sheet(data);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-  XLSX.writeFile(workbook, filename);
+// Export data as Excel using ExcelJS instead of XLSX
+export const exportToExcel = async (data, sheetName = 'Sheet1', filename = 'report.xlsx') => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet(sheetName);
+  
+  // If there's data, extract headers from the first item's keys
+  if (data.length > 0) {
+    // Extract column headers from data keys
+    const columns = Object.keys(data[0]).map(key => ({
+      header: key,
+      key: key,
+      width: 15 // Set a reasonable column width
+    }));
+    
+    worksheet.columns = columns;
+    
+    // Add rows from data
+    data.forEach(item => {
+      worksheet.addRow(item);
+    });
+    
+    // Apply some formatting to header row
+    const headerRow = worksheet.getRow(1);
+    headerRow.font = { bold: true };
+    headerRow.eachCell((cell) => {
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: '8860E6' } // Purple color to match PDF export
+      };
+      cell.font = {
+        bold: true,
+        color: { argb: 'FFFFFFFF' } // White text
+      };
+    });
+  }
+  
+  // Browser-compatible way to download the Excel file
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = window.URL.createObjectURL(blob);
+  
+  // Create a temporary link element to trigger the download
+  const downloadLink = document.createElement('a');
+  downloadLink.href = url;
+  downloadLink.download = filename;
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  
+  // Clean up
+  setTimeout(() => {
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(downloadLink);
+  }, 100);
 };
 
 // Format sales data for export
