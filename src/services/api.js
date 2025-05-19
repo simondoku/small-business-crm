@@ -30,6 +30,17 @@ api.interceptors.response.use(
         timestamp: Date.now(),
       });
     }
+    
+    // Clear related cache entries when data is modified
+    if (['post', 'put', 'patch', 'delete'].includes(response.config.method)) {
+      // Extract the base resource path to clear related cache
+      const url = response.config.url;
+      if (url) {
+        const resourcePath = url.split('/').slice(0, -1).join('/');
+        clearApiCacheFor(resourcePath);
+      }
+    }
+    
     return response;
   },
   async (error) => {

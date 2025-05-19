@@ -24,6 +24,28 @@ const userSchema = mongoose.Schema(
             enum: ['admin', 'staff'],
             default: 'staff',
         },
+        // New fields for transaction tracking and payment status
+        transactionCount: {
+            type: Number,
+            default: 0
+        },
+        isPremium: {
+            type: Boolean,
+            default: false
+        },
+        subscriptionStatus: {
+            type: String,
+            enum: ['free', 'trial', 'paid', 'expired'],
+            default: 'free'
+        },
+        subscriptionExpiry: {
+            type: Date,
+            default: null
+        },
+        lastPaymentDate: {
+            type: Date,
+            default: null
+        }
     },
     {
         timestamps: true,

@@ -1,5 +1,5 @@
 // src/components/common/OptimizedImage.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 /**
  * OptimizedImage component that adds:
@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
  * - Blur placeholder loading effect
  * - Error handling with fallback
  * - Progressive loading
+ * - Image caching
  */
 const OptimizedImage = ({
   src,
@@ -22,12 +23,38 @@ const OptimizedImage = ({
 }) => {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const imgRef = useRef(null);
+  const cacheKey = `img_cache_${src}`;
   
-  // Reset loading state when the source changes
+  // Check if image is cached on mount
   useEffect(() => {
+    // Reset states
     setLoaded(false);
     setError(false);
-  }, [src]);
+    
+    // Try to get from in-memory cache
+    const imageCache = sessionStorage.getItem(cacheKey);
+    if (imageCache) {
+      setLoaded(true);
+    }
+    
+    // For base64 images, mark as loaded immediately
+    if (src && src.startsWith('data:image')) {
+      setLoaded(true);
+    }
+    
+    // For regular URLs, preload the image
+    if (src && !src.startsWith('data:image')) {
+      const img = new Image();
+      img.src = src;
+      img.onload = () => {
+        // Cache the successful load in session storage
+        sessionStorage.setItem(cacheKey, 'cached');
+        setLoaded(true);
+      };
+      img.onerror = () => setError(true);
+    }
+  }, [src, cacheKey]);
 
   const handleImageLoaded = (e) => {
     setLoaded(true);
@@ -39,8 +66,7 @@ const OptimizedImage = ({
     if (onError) onError(e);
   };
 
-  // Calculate placeholder size - for production it's better to use real
-  // placeholder images rather than colored divs
+  // Calculate placeholder size
   const placeholderStyle = {
     width: width || '100%',
     height: height || '100%',
@@ -63,6 +89,7 @@ const OptimizedImage = ({
       
       {/* Actual image */}
       <img
+        ref={imgRef}
         src={error && fallbackSrc ? fallbackSrc : src}
         alt={alt}
         loading="lazy"

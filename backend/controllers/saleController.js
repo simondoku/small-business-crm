@@ -2,6 +2,7 @@
 const Customer = require('../models/Customer');
 const Product = require('../models/Product');
 const Sale = require('../models/Sale');
+const User = require('../models/User');
 
 // Get all sales
 const getSales = async (req, res) => {

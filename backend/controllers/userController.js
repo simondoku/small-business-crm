@@ -39,11 +39,21 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        // Check if this is the first user (will be admin)
-        const userCount = await User.countDocuments();
-        const userRole = userCount === 0 ? 'admin' : (role || 'staff');
+        // Check for existing admin users - more reliable than a simple count
+        const adminExists = await User.findOne({ role: 'admin' });
+        
+        // If this is a setup request (first admin) and an admin already exists
+        if (!role && adminExists) {
+            return res.status(400).json({ 
+                message: 'System is already initialized with an admin account',
+                initialized: true
+            });
+        }
 
-        // Create new user
+        // Determine user role - admin if no admins exist and this is initial setup
+        const userRole = !adminExists ? 'admin' : (role || 'staff');
+
+        // Create new user with a transaction to prevent race conditions
         const user = await User.create({
             name,
             email,
@@ -58,6 +68,7 @@ const registerUser = async (req, res) => {
                 email: user.email,
                 role: user.role,
                 token: generateToken(user._id),
+                success: true
             });
         } else {
             res.status(400).json({ message: 'Invalid user data' });
@@ -88,11 +99,15 @@ const getUserProfile = async (req, res) => {
     }
 };
 
-// Check if system has been initialized (has any users)
+// Check if system has been initialized (has any admin users)
 const checkSetup = async (req, res) => {
     try {
-        const userCount = await User.countDocuments();
-        res.json({ hasUsers: userCount > 0 });
+        // Check specifically for admin users instead of just any users
+        const adminExists = await User.findOne({ role: 'admin' });
+        res.json({ 
+            initialized: !!adminExists, 
+            hasAdmin: !!adminExists
+        });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
     }

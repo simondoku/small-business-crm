@@ -16,13 +16,14 @@ const customerRoutes = require('./routes/customers');
 const salesRoutes = require('./routes/sales');
 const analyticsRoutes = require('./routes/analytics');
 const adminRoutes = require('./routes/admin');
+const paymentRoutes = require('./routes/payments');
 
 // Load environment variables
 dotenv.config();
 
 // Initialize express
 const app = express();
-const PORT = process.env.PORT || 5002;
+const PORT = process.env.PORT || 5003; // Updated to default to 5003 to match .env
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // Connect to MongoDB
@@ -80,6 +81,7 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Health check endpoint for monitoring
 app.get('/api/health', (req, res) => {

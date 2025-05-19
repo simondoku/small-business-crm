@@ -6,11 +6,19 @@ const {
   createSale,
   getMonthlySales
 } = require('../controllers/saleController');
+const { protect, staff } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.get('/monthly', getMonthlySales); 
-router.route('/').get(getSales).post(createSale);
-router.route('/:id').get(getSaleById);
+// Apply authentication to all routes
+router.use(protect);
+
+// Public routes (still requires authentication)
+router.get('/monthly', getMonthlySales);
+router.get('/', getSales);
+router.get('/:id', getSaleById);
+
+// Protected routes
+router.post('/', staff, createSale);
 
 module.exports = router;

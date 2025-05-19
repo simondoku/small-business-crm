@@ -12,6 +12,7 @@ const customerRoutes = require('../backend/routes/customers');
 const salesRoutes = require('../backend/routes/sales');
 const analyticsRoutes = require('../backend/routes/analytics');
 const adminRoutes = require('../backend/routes/admin');
+const paymentRoutes = require('../backend/routes/payments');
 
 // Load environment variables
 if (process.env.NODE_ENV !== 'production') {
@@ -55,6 +56,7 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

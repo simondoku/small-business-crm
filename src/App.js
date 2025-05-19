@@ -39,7 +39,7 @@ const AppRoutes = () => {
             <Route path="/" element={<HomeRedirect />} />
             <Route path="/login" element={<Login />} />
             <Route path="/setup" element={<SetupPage />} />
-
+            
             {/* Protected Routes - All Users */}
             <Route path="/dashboard" element={
               <PrivateRoute>

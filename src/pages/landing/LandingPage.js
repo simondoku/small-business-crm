@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRightIcon, LightningBoltIcon, UserGroupIcon, ChartBarIcon, ShoppingCartIcon } from '@heroicons/react/outline';
+import TrialOfferSection from './TrialOfferSection';
+import dashboardImage from '../../assets/dashboard-preview.png';
 
 const LandingPage = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -97,7 +99,7 @@ const LandingPage = () => {
             <div className="absolute inset-0 bg-gradient-to-b from-primary/20 to-transparent rounded-xl blur-2xl"></div>
             <div className="relative bg-dark-400 rounded-xl shadow-apple-lg overflow-hidden border border-dark-300">
               <img 
-                src="/dashboard-preview.png"
+                src={dashboardImage} 
                 alt="Dashboard Preview" 
                 className="w-full h-auto"
                 onError={(e) => {
@@ -131,6 +133,9 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
+
+      {/* Trial Offer Section - NEW */}
+      <TrialOfferSection />
 
       {/* CTA Section */}
       <section className="py-20 px-6">

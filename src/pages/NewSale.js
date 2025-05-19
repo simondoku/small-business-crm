@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
 import NewSaleForm from '../components/sales/NewSalesForm';
 import LoadingScreen from '../components/common/LoadingScreen';
+import ToastNotification from '../components/common/ToastNotification';
 import { getProducts } from '../services/productService';
 import { getCustomers, createCustomer } from '../services/customerService';
 import { createSale } from '../services/salesService';
@@ -21,6 +22,9 @@ const NewSale = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stockWarnings, setStockWarnings] = useState(null);
+  
+  // Toast notification state
+  const [toast, setToast] = useState(null);
   
   // Fetch products and customers from API
   useEffect(() => {
@@ -114,7 +118,12 @@ const NewSale = () => {
       }
     } catch (err) {
       console.error('Error adding customer:', err);
-      alert('Failed to add customer. Please try again.');
+      // Show toast instead of alert
+      setToast({
+        type: 'error',
+        message: 'Failed to add customer',
+        details: 'Please try again or select an existing customer.'
+      });
     }
   };
   
@@ -124,12 +133,22 @@ const NewSale = () => {
   
   const handleCompleteSale = async () => {
     if (!selectedCustomer || !selectedCustomer._id) {
-      alert('Please select a customer to complete the sale');
+      // Show toast instead of alert
+      setToast({
+        type: 'warning',
+        message: 'Customer Required',
+        details: 'Please select a customer to complete the sale'
+      });
       return;
     }
     
     if (saleItems.length === 0) {
-      alert('Please add at least one product to the sale');
+      // Show toast instead of alert
+      setToast({
+        type: 'warning',
+        message: 'No Products Selected',
+        details: 'Please add at least one product to the sale'
+      });
       return;
     }
     
@@ -145,46 +164,88 @@ const NewSale = () => {
       };
       
       // Create the sale through API
-      const result = await createSale(saleData);
+      const response = await createSale(saleData);
       
-      // Check for warnings
-      if (result.warnings) {
-        if (result.warnings.lowStock) {
-          alert(`Warning: Low stock for the following products:\n${
-            result.warnings.lowStock.map(p => `${p.name}: Only ${p.stock} left`).join('\n')
-          }`);
+      // Handle warnings with toast notifications
+      if (response.warnings) {
+        if (response.warnings.lowStock && response.warnings.lowStock.length > 0) {
+          // Format low stock warnings
+          const lowStockDetails = response.warnings.lowStock.map(
+            p => `${p.name}: Only ${p.stock} left`
+          );
+          
+          setToast({
+            type: 'warning',
+            message: 'Low Stock Warning',
+            details: lowStockDetails,
+            duration: 5000
+          });
         }
         
-        if (result.warnings.soldOut) {
-          alert(`The following products are out of stock:\n${
-            result.warnings.soldOut.map(p => p.name).join('\n')
-          }`);
+        if (response.warnings.soldOut && response.warnings.soldOut.length > 0) {
+          // Format sold out warnings
+          const soldOutDetails = response.warnings.soldOut.map(
+            p => `${p.name} is out of stock`
+          );
+          
+          // Show after a delay if there was already a low stock warning
+          setTimeout(() => {
+            setToast({
+              type: 'warning',
+              message: 'Products Out of Stock',
+              details: soldOutDetails,
+              duration: 5000
+            });
+          }, response.warnings.lowStock ? 5500 : 0);
         }
       }
       
-      // Reset form
+      // Reset form but stay on the same page
       setSaleItems([]);
       setSelectedCustomer(null);
       setComments('');
       
-      // Show success message and navigate to dashboard
-      alert('Sale completed successfully!');
-      navigate('/');
+      // Show success message toast instead of alert
+      setTimeout(() => {
+        setToast({
+          type: 'success',
+          message: 'Sale Completed Successfully',
+          details: `Total Amount: $${response.sale.totalAmount.toFixed(2)}`,
+          duration: 3000
+        });
+      }, (response.warnings?.lowStock || response.warnings?.soldOut) ? 6000 : 0);
+      
+      // Refresh product data to ensure we have the latest stock levels
+      const refreshedProducts = await getProducts();
+      setProducts(refreshedProducts);
     } catch (err) {
       console.error('Error completing sale:', err);
+      
       const errorMsg = err.response?.data?.message || err.message || 'Unknown error';
-      alert(`Failed to complete sale: ${errorMsg}`);
+      
+      // Show error toast instead of alert
+      setToast({
+        type: 'error',
+        message: 'Failed to Complete Sale',
+        details: errorMsg,
+        duration: 5000
+      });
     }
   };
 
-  // Auto-enter focus mode when entering the NewSale page
+  // Modified focus mode logic - only prompt once per session
   useEffect(() => {
-    // Only suggest focus mode when starting a transaction
-    if (!focusMode && saleItems.length > 0) {
+    // Check if we've already asked about focus mode in this session
+    const hasAskedAboutFocusMode = sessionStorage.getItem('hasAskedAboutFocusMode');
+    
+    // Only suggest focus mode when starting a transaction and haven't asked before
+    if (!focusMode && saleItems.length > 0 && !hasAskedAboutFocusMode) {
       const suggestFocusMode = () => {
         if (window.confirm('Would you like to enter focus mode for this transaction?')) {
           enterFocusMode();
         }
+        // Remember that we've asked in this session
+        sessionStorage.setItem('hasAskedAboutFocusMode', 'true');
       };
       
       suggestFocusMode();
@@ -245,6 +306,17 @@ const NewSale = () => {
             error={error}
             focusMode={focusMode}
           />
+          
+          {/* Toast notification */}
+          {toast && (
+            <ToastNotification
+              type={toast.type}
+              message={toast.message}
+              details={toast.details}
+              duration={toast.duration || 3000}
+              onClose={() => setToast(null)}
+            />
+          )}
         </>
       )}
     </MainLayout>

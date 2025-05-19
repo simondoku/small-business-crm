@@ -53,11 +53,40 @@ const Dashboard = () => {
         setLoading(true);
         
         // Fetch sales, products, and customers
-        const [sales, products, customers] = await Promise.all([
-          getSales(),
-          getProducts(),
-          getCustomers()
-        ]);
+        let sales = [];
+        let products = [];
+        let customers = [];
+        
+        try {
+          // Use Promise.allSettled instead of Promise.all to handle individual request failures
+          const [salesResult, productsResult, customersResult] = await Promise.allSettled([
+            getSales(),
+            getProducts(),
+            getCustomers()
+          ]);
+          
+          // Extract successful responses
+          if (salesResult.status === 'fulfilled') {
+            sales = salesResult.value;
+          }
+          
+          if (productsResult.status === 'fulfilled') {
+            products = productsResult.value;
+          }
+          
+          if (customersResult.status === 'fulfilled') {
+            customers = customersResult.value;
+          }
+          
+          // Check if we hit the transaction limit
+          if (salesResult.status === 'rejected' && 
+              salesResult.reason?.response?.status === 402) {
+            setError('Your free transaction limit has been reached. Please upgrade your account to continue using all features.');
+          }
+        } catch (err) {
+          console.error('Error fetching data:', err);
+          // Continue with whatever data we have
+        }
         
         // Process data for different time periods
         const today = new Date();
