@@ -1,6 +1,7 @@
 // src/context/AuthContext.js
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '../services/api';
+import { logoutUser } from '../services/userService';
 
 const AuthContext = createContext();
 
@@ -90,10 +91,20 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Logout user
-    const logout = () => {
-        setUser(null);
-        localStorage.removeItem('user');
-        delete api.defaults.headers.common['Authorization'];
+    const logout = async () => {
+        try {
+            if (user) {
+                // Record logout in backend
+                await logoutUser();
+            }
+        } catch (error) {
+            console.error('Error recording logout:', error);
+        } finally {
+            // Always clear local state even if API call fails
+            setUser(null);
+            localStorage.removeItem('user');
+            delete api.defaults.headers.common['Authorization'];
+        }
     };
 
     const checkPermission = (requiredRole) => {

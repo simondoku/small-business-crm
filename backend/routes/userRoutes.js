@@ -5,7 +5,11 @@ const {
     registerUser,
     getUserProfile,
     checkSetup,
-    getUsers
+    getUsers,
+    logoutUser,
+    getUserActivity,
+    updateUser,
+    deleteUser
 } = require('../controllers/userController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -18,6 +22,12 @@ router.get('/check-setup', checkSetup);
 
 // Protected routes
 router.get('/profile', protect, getUserProfile);
+router.post('/logout', protect, logoutUser); // New logout endpoint to record logout activity
 router.get('/', protect, admin, getUsers); // Only admin can get all users
+router.get('/:userId/activity', protect, admin, getUserActivity); // New endpoint to get user activity history
+
+// Admin routes for user management
+router.put('/:userId', protect, admin, updateUser); // Update user (admin only)
+router.delete('/:userId', protect, admin, deleteUser); // Delete user (admin only)
 
 module.exports = router;

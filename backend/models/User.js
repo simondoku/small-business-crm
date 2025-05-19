@@ -45,7 +45,35 @@ const userSchema = mongoose.Schema(
         lastPaymentDate: {
             type: Date,
             default: null
-        }
+        },
+        // Login activity tracking
+        lastLogin: {
+            type: Date,
+            default: null
+        },
+        lastLogout: {
+            type: Date,
+            default: null
+        },
+        loginHistory: [{
+            action: {
+                type: String,
+                enum: ['login', 'logout'],
+                required: true
+            },
+            timestamp: {
+                type: Date,
+                default: Date.now
+            },
+            ipAddress: {
+                type: String,
+                default: ''
+            },
+            userAgent: {
+                type: String,
+                default: ''
+            }
+        }]
     },
     {
         timestamps: true,

@@ -33,3 +33,27 @@ export const updatePassword = async (currentPassword, newPassword) => {
   });
   return response.data;
 };
+
+// Record user logout
+export const logoutUser = async () => {
+  const response = await api.post('/users/logout');
+  return response.data;
+};
+
+// Get user activity history (admin only)
+export const getUserActivity = async (userId) => {
+  const response = await api.get(`/users/${userId}/activity`);
+  return response.data;
+};
+
+// Update a user (admin only)
+export const updateUser = async (userId, userData) => {
+  const response = await api.put(`/users/${userId}`, userData);
+  return response.data;
+};
+
+// Delete a user (admin only)
+export const deleteUser = async (userId) => {
+  const response = await api.delete(`/users/${userId}`);
+  return response.data;
+};

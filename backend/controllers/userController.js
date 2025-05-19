@@ -13,6 +13,20 @@ const authUser = async (req, res) => {
 
         // Check if user exists and password matches
         if (user && (await user.matchPassword(password))) {
+            // Record login activity
+            const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+            const userAgent = req.headers['user-agent'] || '';
+            
+            user.lastLogin = new Date();
+            user.loginHistory.push({
+                action: 'login',
+                timestamp: new Date(),
+                ipAddress,
+                userAgent
+            });
+            
+            await user.save();
+
             res.json({
                 _id: user._id,
                 name: user.name,
@@ -23,6 +37,65 @@ const authUser = async (req, res) => {
         } else {
             res.status(401).json({ message: 'Invalid email or password' });
         }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Record user logout
+const logoutUser = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const user = await User.findById(userId);
+        
+        if (user) {
+            // Record logout activity
+            const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+            const userAgent = req.headers['user-agent'] || '';
+            
+            user.lastLogout = new Date();
+            user.loginHistory.push({
+                action: 'logout',
+                timestamp: new Date(),
+                ipAddress,
+                userAgent
+            });
+            
+            await user.save();
+            
+            res.json({ message: 'Logged out successfully' });
+        } else {
+            res.status(404).json({ message: 'User not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Get user activity history (admin only)
+const getUserActivity = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Only admins can view user activity
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+        
+        const user = await User.findById(userId).select('name email loginHistory lastLogin lastLogout');
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        res.json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            lastLogin: user.lastLogin,
+            lastLogout: user.lastLogout,
+            loginHistory: user.loginHistory
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -78,6 +151,101 @@ const registerUser = async (req, res) => {
     }
 };
 
+// Update user (admin only)
+const updateUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { name, email, role, password } = req.body;
+        
+        // Only admins can update users
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+        
+        // Check if user exists
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        // Prevent admins from demoting themselves
+        if (user._id.toString() === req.user._id.toString() && role && role !== 'admin') {
+            return res.status(400).json({ message: 'Admins cannot demote themselves' });
+        }
+        
+        // Update basic fields
+        user.name = name || user.name;
+        user.email = email || user.email;
+        
+        // Only update role if specified
+        if (role) {
+            user.role = role;
+        }
+        
+        // Only update password if provided
+        if (password) {
+            user.password = password;
+        }
+        
+        // Save updated user
+        const updatedUser = await user.save();
+        
+        // Return updated user data
+        res.json({
+            _id: updatedUser._id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            role: updatedUser.role,
+            createdAt: updatedUser.createdAt,
+            lastLogin: updatedUser.lastLogin
+        });
+    } catch (error) {
+        // Handle duplicate email error
+        if (error.code === 11000) {
+            return res.status(400).json({ message: 'Email already in use' });
+        }
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Delete user (admin only)
+const deleteUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Only admins can delete users
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+        
+        // Check if user exists
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        // Prevent admins from deleting their own account
+        if (user._id.toString() === req.user._id.toString()) {
+            return res.status(400).json({ message: 'Admins cannot delete their own account' });
+        }
+        
+        // Check if this is the last admin
+        if (user.role === 'admin') {
+            const adminCount = await User.countDocuments({ role: 'admin' });
+            if (adminCount <= 1) {
+                return res.status(400).json({ message: 'Cannot delete the last admin account' });
+            }
+        }
+        
+        // Delete the user using findByIdAndDelete instead of remove()
+        await User.findByIdAndDelete(userId);
+        
+        res.json({ message: 'User deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // Get user profile
 const getUserProfile = async (req, res) => {
     try {
@@ -121,7 +289,7 @@ const getUsers = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        const users = await User.find({}).select('-password');
+        const users = await User.find({}).select('-password -loginHistory');
         res.json(users);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -133,5 +301,9 @@ module.exports = {
     registerUser,
     getUserProfile,
     checkSetup,
-    getUsers
+    getUsers,
+    logoutUser,
+    getUserActivity,
+    updateUser,
+    deleteUser
 };
