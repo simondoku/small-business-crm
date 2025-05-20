@@ -1,22 +1,9 @@
 // src/services/api.js
 import axios from 'axios';
+import { API_CONFIG } from '../config/environment';
 
-// Determine the base URL dynamically based on the current domain
-const getBaseUrl = () => {
-  // In the browser
-  if (typeof window !== 'undefined') {
-    const protocol = window.location.protocol;
-    const host = window.location.host;
-    return `${protocol}//${host}/api`;
-  }
-  // Fallback to environment variable or default
-  return process.env.REACT_APP_API_URL || 'https://www.bcrm.dev/api';
-};
-
-const API_URL = getBaseUrl();
-
-// Log the API URL in development to help with debugging
-console.log('API URL:', API_URL); // Always log this for debugging
+// Use the centralized environment configuration for API settings
+console.log('API URL being used:', API_CONFIG.baseUrl); // Debug log to verify URL
 
 // Simple in-memory cache for GET requests
 const cache = new Map();
@@ -24,51 +11,12 @@ const CACHE_DURATION = process.env.REACT_APP_CACHE_DURATION ?
   parseInt(process.env.REACT_APP_CACHE_DURATION) : 5 * 60 * 1000; // 5 minutes by default
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: API_CONFIG.baseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
-  // Increase timeout for production to match backend timeouts
-  timeout: 25000, // 25 seconds - increased from 10 seconds
+  timeout: API_CONFIG.timeout,
 });
-
-// Enhanced request debugging
-if (process.env.NODE_ENV !== 'production') {
-  api.interceptors.request.use(request => {
-    console.log('Request:', {
-      url: request.url,
-      baseURL: request.baseURL,
-      method: request.method,
-      headers: request.headers,
-      data: request.data
-    });
-    return request;
-  });
-
-  api.interceptors.response.use(
-    response => {
-      console.log('Response:', {
-        status: response.status,
-        statusText: response.statusText,
-        url: response.config.url,
-        data: response.data
-      });
-      return response;
-    },
-    error => {
-      console.error('API Error:', {
-        message: error.message,
-        code: error.code,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        url: error.config?.url,
-        method: error.config?.method
-      });
-      return Promise.reject(error);
-    }
-  );
-}
 
 // Add response interceptor for error handling
 api.interceptors.response.use(
@@ -96,33 +44,6 @@ api.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    
-    // Log detailed error information for debugging
-    if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      console.error('API Error Response:', {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        data: error.response.data,
-        headers: error.response.headers,
-        url: originalRequest.url,
-        baseURL: originalRequest.baseURL,
-        method: originalRequest.method
-      });
-    } else if (error.request) {
-      // The request was made but no response was received
-      console.error('API Error Request:', {
-        request: error.request,
-        url: originalRequest.url,
-        baseURL: originalRequest.baseURL,
-        method: originalRequest.method,
-        timeout: originalRequest.timeout
-      });
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      console.error('API Error Setup:', error.message);
-    }
     
     // Implement retry logic for network errors or 5xx server errors
     if ((error.code === 'ECONNABORTED' || 
@@ -226,6 +147,11 @@ export const clearApiCacheFor = (url) => {
   }
 };
 
+// Add compression for production
+if (process.env.NODE_ENV === 'production') {
+  api.defaults.headers['Accept-Encoding'] = 'gzip, deflate, br';
+}
+
 // Add special configuration for Vercel deployment
 // Detect if we're in a Vercel production environment
 const isVercelProduction = process.env.VERCEL === '1' && process.env.NODE_ENV === 'production';
@@ -241,26 +167,9 @@ if (isVercelProduction) {
     }
     return config;
   });
+  
+  // Set more aggressive caching for Vercel's serverless functions
+  api.defaults.headers.common['Cache-Control'] = 'public, max-age=30, stale-while-revalidate=300';
 }
-
-// Export a function to test API connectivity
-export const testApiConnection = async () => {
-  try {
-    const response = await api.get('/debug');
-    return {
-      success: true,
-      data: response.data
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data
-      }
-    };
-  }
-};
 
 export default api;
