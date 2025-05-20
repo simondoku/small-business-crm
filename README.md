@@ -13,7 +13,7 @@ A comprehensive Customer Relationship Management system for small businesses. Th
 - **Category Management**: Organize products by categories for better inventory control
 - **Advanced Analytics**: Visualize sales activity with heatmaps and detailed reports
 - **Focus Mode**: Streamlined interface for faster sales processing
-- **Subscription Plans**: Free and Premium tiers with different feature sets
+- **Subscription Plans[not yet implemented]**: Free and Premium tiers with different feature sets
 - **Admin Controls**: Reset dashboard data and manage user access
 - **Payment Methods**: Support for both cash and card transactions
 - **Stock Warnings**: Get alerts for low or insufficient inventory
