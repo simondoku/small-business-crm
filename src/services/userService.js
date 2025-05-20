@@ -7,6 +7,18 @@ export const getUsers = async () => {
   return response.data;
 };
 
+// Register a new user
+export const register = async (userData) => {
+  const response = await api.post('/users', userData);
+  return response.data;
+};
+
+// Login user
+export const login = async (email, password) => {
+  const response = await api.post('/users/login', { email, password });
+  return response.data;
+};
+
 // Create a new user (admin only)
 export const createUser = async (userData) => {
   const response = await api.post('/users', userData);

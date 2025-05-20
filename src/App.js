@@ -21,6 +21,7 @@ const Reports = lazy(() => import('./pages/Reports'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const UsersPage = lazy(() => import('./pages/UsersPage'));
 const LandingPage = lazy(() => import('./pages/landing/LandingPage'));
+const ApiTest = lazy(() => import('./pages/ApiTest')); // Import the API Test page
 
 // Wrapper component to handle redirection based on auth state
 const HomeRedirect = () => {
@@ -39,6 +40,9 @@ const AppRoutes = () => {
             <Route path="/" element={<HomeRedirect />} />
             <Route path="/login" element={<Login />} />
             <Route path="/setup" element={<SetupPage />} />
+            
+            {/* API Test Page - Keep this public for debugging */}
+            <Route path="/api-test" element={<ApiTest />} />
             
             {/* Protected Routes - All Users */}
             <Route path="/dashboard" element={

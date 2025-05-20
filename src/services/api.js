@@ -16,9 +16,7 @@ const getBaseUrl = () => {
 const API_URL = getBaseUrl();
 
 // Log the API URL in development to help with debugging
-if (process.env.NODE_ENV !== 'production') {
-  console.log('API URL:', API_URL);
-}
+console.log('API URL:', API_URL); // Always log this for debugging
 
 // Simple in-memory cache for GET requests
 const cache = new Map();
@@ -30,9 +28,47 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  // Set reasonable timeouts for production
-  timeout: 10000, // 10 seconds
+  // Increase timeout for production to match backend timeouts
+  timeout: 25000, // 25 seconds - increased from 10 seconds
 });
+
+// Enhanced request debugging
+if (process.env.NODE_ENV !== 'production') {
+  api.interceptors.request.use(request => {
+    console.log('Request:', {
+      url: request.url,
+      baseURL: request.baseURL,
+      method: request.method,
+      headers: request.headers,
+      data: request.data
+    });
+    return request;
+  });
+
+  api.interceptors.response.use(
+    response => {
+      console.log('Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: response.config.url,
+        data: response.data
+      });
+      return response;
+    },
+    error => {
+      console.error('API Error:', {
+        message: error.message,
+        code: error.code,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url,
+        method: error.config?.method
+      });
+      return Promise.reject(error);
+    }
+  );
+}
 
 // Add response interceptor for error handling
 api.interceptors.response.use(
@@ -60,6 +96,33 @@ api.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
+    
+    // Log detailed error information for debugging
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error('API Error Response:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data,
+        headers: error.response.headers,
+        url: originalRequest.url,
+        baseURL: originalRequest.baseURL,
+        method: originalRequest.method
+      });
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('API Error Request:', {
+        request: error.request,
+        url: originalRequest.url,
+        baseURL: originalRequest.baseURL,
+        method: originalRequest.method,
+        timeout: originalRequest.timeout
+      });
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error('API Error Setup:', error.message);
+    }
     
     // Implement retry logic for network errors or 5xx server errors
     if ((error.code === 'ECONNABORTED' || 
@@ -179,5 +242,25 @@ if (isVercelProduction) {
     return config;
   });
 }
+
+// Export a function to test API connectivity
+export const testApiConnection = async () => {
+  try {
+    const response = await api.get('/debug');
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      }
+    };
+  }
+};
 
 export default api;

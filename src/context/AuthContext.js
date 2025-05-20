@@ -1,7 +1,7 @@
 // src/context/AuthContext.js
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '../services/api';
-import { logoutUser } from '../services/userService';
+import { logoutUser, login as loginService, register as registerService, checkSystemSetup } from '../services/userService';
 
 const AuthContext = createContext();
 
@@ -26,9 +26,9 @@ export const AuthProvider = ({ children }) => {
                 }
                 
                 // Check if the system has been initialized (has any admin users)
-                const response = await api.get('/users/check-setup');
-                setInitialized(response.data.initialized);
-                setHasAdmin(response.data.hasAdmin);
+                const setupData = await checkSystemSetup();
+                setInitialized(setupData.initialized);
+                setHasAdmin(setupData.hasAdmin);
             } catch (error) {
                 console.error('Error during authentication initialization:', error);
                 localStorage.removeItem('user');
@@ -43,13 +43,13 @@ export const AuthProvider = ({ children }) => {
     // Login user
     const login = async (email, password) => {
         try {
-            const response = await api.post('/users/login', { email, password });
+            const data = await loginService(email, password);
             
-            if (response.data) {
-                setUser(response.data);
-                localStorage.setItem('user', JSON.stringify(response.data));
-                api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-                return { success: true, data: response.data };
+            if (data) {
+                setUser(data);
+                localStorage.setItem('user', JSON.stringify(data));
+                api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+                return { success: true, data };
             }
         } catch (error) {
             return {
@@ -62,19 +62,18 @@ export const AuthProvider = ({ children }) => {
     // Register new user - first user is admin
     const register = async (userData) => {
         try {
-            // We don't need to specify role for the initial admin
-            // The backend will handle this logic more securely now
-            const response = await api.post('/users', userData);
+            // Use the registerService from userService.js
+            const data = await registerService(userData);
             
-            if (response.data.success) {
+            if (data.success) {
                 // Update initialization status when successful admin registration occurs
-                if (response.data.role === 'admin') {
+                if (data.role === 'admin') {
                     setInitialized(true);
                     setHasAdmin(true);
                 }
             }
             
-            return { success: true, data: response.data };
+            return { success: true, data };
         } catch (error) {
             // Check if this error is because system is already initialized
             if (error.response?.data?.initialized) {
