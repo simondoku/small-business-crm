@@ -1,7 +1,7 @@
 // src/context/AuthContext.js
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '../services/api';
-import { logoutUser, login as loginService, register as registerService, checkSystemSetup } from '../services/userService';
+import { logoutUser } from '../services/userService';
 
 const AuthContext = createContext();
 
@@ -12,6 +12,7 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [initialized, setInitialized] = useState(false);
     const [hasAdmin, setHasAdmin] = useState(false);
+    const [authError, setAuthError] = useState(null);
 
     // Check if user is already logged in
     useEffect(() => {
@@ -26,12 +27,21 @@ export const AuthProvider = ({ children }) => {
                 }
                 
                 // Check if the system has been initialized (has any admin users)
-                const setupData = await checkSystemSetup();
-                setInitialized(setupData.initialized);
-                setHasAdmin(setupData.hasAdmin);
+                try {
+                    const response = await api.get('/users/check-setup');
+                    setInitialized(response.data.initialized);
+                    setHasAdmin(response.data.hasAdmin);
+                } catch (setupError) {
+                    console.error('Error checking system setup:', setupError);
+                    // Don't clear user data if only the setup check fails
+                    // Instead, assume system is initialized to avoid blocking the UI
+                    setInitialized(true);
+                    setAuthError('System setup check failed, but proceeding with authentication');
+                }
             } catch (error) {
                 console.error('Error during authentication initialization:', error);
                 localStorage.removeItem('user');
+                setAuthError('Authentication failed. Please log in again.');
             } finally {
                 setLoading(false);
             }
@@ -43,13 +53,13 @@ export const AuthProvider = ({ children }) => {
     // Login user
     const login = async (email, password) => {
         try {
-            const data = await loginService(email, password);
+            const response = await api.post('/users/login', { email, password });
             
-            if (data) {
-                setUser(data);
-                localStorage.setItem('user', JSON.stringify(data));
-                api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
-                return { success: true, data };
+            if (response.data) {
+                setUser(response.data);
+                localStorage.setItem('user', JSON.stringify(response.data));
+                api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+                return { success: true, data: response.data };
             }
         } catch (error) {
             return {
@@ -62,23 +72,43 @@ export const AuthProvider = ({ children }) => {
     // Register new user - first user is admin
     const register = async (userData) => {
         try {
-            // Use the registerService from userService.js
-            const data = await registerService(userData);
+            // Configure a longer timeout specifically for the registration request
+            const response = await api.post('/users', userData, {
+                timeout: 60000, // 60 seconds for registration specifically
+            });
             
-            if (data.success) {
+            if (response.data.success) {
                 // Update initialization status when successful admin registration occurs
-                if (data.role === 'admin') {
+                if (response.data.role === 'admin') {
                     setInitialized(true);
                     setHasAdmin(true);
                 }
+                
+                // If this is the first login after registration, set the user
+                if (!user) {
+                    setUser(response.data);
+                    localStorage.setItem('user', JSON.stringify(response.data));
+                    api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+                }
             }
             
-            return { success: true, data };
+            return { success: true, data: response.data };
         } catch (error) {
+            console.error('Registration error:', error);
+            
             // Check if this error is because system is already initialized
             if (error.response?.data?.initialized) {
                 setInitialized(true);
                 setHasAdmin(true);
+            }
+            
+            // Handle timeout errors specifically
+            if (error.code === 'ECONNABORTED') {
+                return {
+                    success: false,
+                    message: 'Registration timed out. The server might be busy or experiencing issues. Please try again.',
+                    isTimeout: true
+                };
             }
             
             return {
@@ -120,7 +150,8 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
-        checkPermission
+        checkPermission,
+        authError // Expose authError to the context consumers
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
