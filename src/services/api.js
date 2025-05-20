@@ -1,9 +1,9 @@
 // src/services/api.js
 import axios from 'axios';
+import { API_CONFIG } from '../config/environment';
 
-// Use environment variables for API URL to support different environments
-// For Vercel deployments, relative URLs will work when deployed together
-const API_URL = process.env.REACT_APP_API_URL || '/api';
+// Use the centralized environment configuration for API settings
+console.log('API URL being used:', API_CONFIG.baseUrl); // Debug log to verify URL
 
 // Simple in-memory cache for GET requests
 const cache = new Map();
@@ -11,12 +11,12 @@ const CACHE_DURATION = process.env.REACT_APP_CACHE_DURATION ?
   parseInt(process.env.REACT_APP_CACHE_DURATION) : 5 * 60 * 1000; // 5 minutes by default
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: API_CONFIG.baseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
-  // Set reasonable timeouts for production
-  timeout: 10000, // 10 seconds
+  // Increase timeout for slow connections or heavy operations
+  timeout: API_CONFIG.timeout,
 });
 
 // Add response interceptor for error handling

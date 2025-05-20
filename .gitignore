@@ -4,34 +4,60 @@
 /node_modules
 /.pnp
 .pnp.js
+/backend/node_modules
 
 # testing
 /coverage
+/backend/coverage
 
 # production
 /build
+/dist
+
+# environment variables - all environments
+.env
+.env.*
+!.env.example
+/backend/.env
+/backend/.env.*
+!backend/.env.example
 
 # misc
 .DS_Store
-.env
 .env.local
+.env.development
 .env.development.local
 .env.test.local
 .env.production.local
-/backend/.env
 /backend/.env.local
+/backend/.env.development
 /backend/.env.development.local
 /backend/.env.test.local
 /backend/.env.production.local
-
-# Allow example env files
-!.env.example
-!backend/.env.example
 
 # logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+logs
+*.log
 
 # sensitive data
 .vercel
+.netlify
+.vscode
+.idea
+
+# local certificates
+*.pem
+*.key
+*.cert
+
+# database dumps
+*.sql
+*.dump
+*.sqlite
+
+# personal notes and todos
+TODO.md
+NOTES.md
