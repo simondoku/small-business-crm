@@ -22,22 +22,35 @@ if (process.env.NODE_ENV !== 'production') {
 // Initialize express
 const app = express();
 
-// Connect to MongoDB
+// Improved MongoDB connection for serverless environments
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      autoIndex: process.env.NODE_ENV !== 'production', // Don't build indexes in production
-    });
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    if (mongoose.connection.readyState === 0) { // Only connect if not already connected
+      console.log('Connecting to MongoDB Atlas...');
+      const conn = await mongoose.connect(process.env.MONGO_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+        socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+      });
+      console.log(`MongoDB Connected: ${conn.connection.host}`);
+    } else {
+      console.log('MongoDB already connected.');
+    }
   } catch (error) {
-    console.error(`Error: ${error.message}`);
-    process.exit(1);
+    console.error(`MongoDB Connection Error: ${error.message}`);
+    console.error('Stack trace:', error.stack);
+    // Don't exit process, handle gracefully for serverless
+    return { error: true, message: error.message };
   }
 };
 
-connectDB();
+// Connect to MongoDB and don't proceed if connection fails
+connectDB().then(result => {
+  if (result && result.error) {
+    console.error('Failed to connect to MongoDB. API may not function correctly.');
+  }
+});
 
 // Apply security headers
 app.use(helmet());

@@ -104,6 +104,11 @@ const getUserActivity = async (req, res) => {
 // Register a new user
 const registerUser = async (req, res) => {
     try {
+        console.log('Registration request received:', JSON.stringify({
+            ...req.body,
+            password: '[REDACTED]'
+        }));
+
         const { name, email, password, role } = req.body;
 
         // Check if user already exists
@@ -114,6 +119,7 @@ const registerUser = async (req, res) => {
 
         // Check for existing admin users - more reliable than a simple count
         const adminExists = await User.findOne({ role: 'admin' });
+        console.log('Admin exists check:', adminExists ? 'Yes' : 'No');
         
         // If this is a setup request (first admin) and an admin already exists
         if (!role && adminExists) {
@@ -125,16 +131,22 @@ const registerUser = async (req, res) => {
 
         // Determine user role - admin if no admins exist and this is initial setup
         const userRole = !adminExists ? 'admin' : (role || 'staff');
+        console.log('Assigning role:', userRole);
 
-        // Create new user with a transaction to prevent race conditions
+        // Hash password manually instead of relying on mongoose middleware
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Create new user without relying on middleware
         const user = await User.create({
             name,
             email,
-            password,
+            password: hashedPassword,
             role: userRole,
         });
 
         if (user) {
+            console.log('User created successfully:', user._id);
             res.status(201).json({
                 _id: user._id,
                 name: user.name,
@@ -147,7 +159,11 @@ const registerUser = async (req, res) => {
             res.status(400).json({ message: 'Invalid user data' });
         }
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Registration error:', error);
+        res.status(500).json({ 
+            message: error.message,
+            stack: process.env.NODE_ENV === 'production' ? '🥞' : error.stack 
+        });
     }
 };
 

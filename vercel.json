@@ -7,6 +7,10 @@
       "config": {
         "distDir": "build"
       }
+    },
+    {
+      "src": "api/serverless.js",
+      "use": "@vercel/node"
     }
   ],
   "build": {
@@ -15,6 +19,10 @@
     }
   },
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/serverless.js"
+    },
     {
       "src": "/static/(.*)",
       "headers": {

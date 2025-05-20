@@ -1,9 +1,24 @@
 // src/services/api.js
 import axios from 'axios';
 
-// Use environment variables for API URL to support different environments
-// For Vercel deployments, relative URLs will work when deployed together
-const API_URL = process.env.REACT_APP_API_URL || '/api';
+// Determine the base URL dynamically based on the current domain
+const getBaseUrl = () => {
+  // In the browser
+  if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol;
+    const host = window.location.host;
+    return `${protocol}//${host}/api`;
+  }
+  // Fallback to environment variable or default
+  return process.env.REACT_APP_API_URL || 'https://www.bcrm.dev/api';
+};
+
+const API_URL = getBaseUrl();
+
+// Log the API URL in development to help with debugging
+if (process.env.NODE_ENV !== 'production') {
+  console.log('API URL:', API_URL);
+}
 
 // Simple in-memory cache for GET requests
 const cache = new Map();

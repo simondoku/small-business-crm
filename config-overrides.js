@@ -3,11 +3,24 @@ const { override, adjustStyleLoaders, addWebpackPlugin, addBabelPlugin } = requi
 const TerserPlugin = require('terser-webpack-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const webpack = require('webpack');
 const path = require('path');
 
 module.exports = override(
   // Add Babel plugins for optimization
   addBabelPlugin('@babel/plugin-transform-runtime'),
+  
+  // Force set the API URL for production builds
+  (config) => {
+    // Define REACT_APP_API_URL for production builds
+    config.plugins = [
+      ...config.plugins,
+      new webpack.DefinePlugin({
+        'process.env.REACT_APP_API_URL': JSON.stringify('https://www.bcrm.dev/api')
+      })
+    ];
+    return config;
+  },
   
   // Optimize CSS
   adjustStyleLoaders(({ use: [, css, postcss, resolve, processor] }) => {
