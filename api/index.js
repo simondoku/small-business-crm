@@ -77,17 +77,17 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 
-// API Routes
-app.use('/api/users', userRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/customers', customerRoutes);
-app.use('/api/sales', salesRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/payments', paymentRoutes);
+// API Routes - Remove /api prefix since Vercel already handles that
+app.use('/users', userRoutes);
+app.use('/products', productRoutes);
+app.use('/customers', customerRoutes);
+app.use('/sales', salesRoutes);
+app.use('/analytics', analyticsRoutes);
+app.use('/admin', adminRoutes);
+app.use('/payments', paymentRoutes);
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', environment: process.env.NODE_ENV });
 });
 
