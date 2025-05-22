@@ -6,8 +6,8 @@ import { API_CONFIG } from '../config/environment';
 console.log('API URL being used:', API_CONFIG.baseUrl); // Debug log to verify URL
 
 // Ensure the baseURL is an absolute URL in production to avoid proxy issues
-const baseURL = process.env.NODE_ENV === 'production' && !API_CONFIG.baseUrl.startsWith('http')
-  ? `https://businesscrm-suix99spo-simons-projects-94c78eac.vercel.app/api`
+const baseURL = process.env.NODE_ENV === 'production' 
+  ? 'https://businesscrm-suix99spo-simons-projects-94c78eac.vercel.app/api'
   : API_CONFIG.baseUrl;
 
 console.log('Final baseURL for axios:', baseURL); // Additional debug log

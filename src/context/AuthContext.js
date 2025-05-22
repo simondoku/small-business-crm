@@ -56,11 +56,8 @@ export const AuthProvider = ({ children }) => {
         try {
             console.log('Attempting login with API URL:', api.defaults.baseURL);
             
-            // Force absolute URL for login to bypass any URL transformation issues
-            const loginUrl = 'https://businesscrm-suix99spo-simons-projects-94c78eac.vercel.app/api/users/login';
-            console.log('Using direct login URL:', loginUrl);
-            
-            const response = await axios.post(loginUrl, { email, password });
+            // Use the API instance which has the correct baseURL configuration
+            const response = await api.post('/users/login', { email, password });
             
             if (response.data) {
                 console.log('Login successful, user data received');
