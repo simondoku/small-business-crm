@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #4a6ee0;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #3a5bc0;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .result {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            font-family: monospace;
+        }
+        .success {
+            border-color: #4caf50;
+            background-color: #e8f5e9;
+        }
+        .error {
+            border-color: #f44336;
+            background-color: #ffebee;
+        }
+        h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+        .status-success {
+            background-color: #4caf50;
+            color: white;
+        }
+        .status-error {
+            background-color: #f44336;
+            color: white;
+        }
+        .details {
+            font-size: 14px;
+            margin-bottom: 15px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Direct API Connection Test</h1>
+    <p>This page tests direct connectivity to your backend API without using React or any complex libraries.</p>
+    
+    <div class="card">
+        <div class="header">
+            <h3>1. Health Check Test</h3>
+            <div id="healthStatus"></div>
+        </div>
+        <div class="details">Tests basic connectivity to your backend API's health endpoint.</div>
+        <input type="text" id="healthUrl" value="https://businesscrm-suix99spo-simons-projects-94c78eac.vercel.app/api/health">
+        <button onclick="testEndpoint('health', document.getElementById('healthUrl').value)">Test Health Endpoint</button>
+        <div id="healthResult" class="result"></div>
+    </div>
+    
+    <div class="card">
+        <div class="header">
+            <h3>2. Check Setup Test</h3>
+            <div id="setupStatus"></div>
+        </div>
+        <div class="details">Tests the system setup endpoint which checks if any admin users exist.</div>
+        <input type="text" id="setupUrl" value="https://businesscrm-suix99spo-simons-projects-94c78eac.vercel.app/api/users/check-setup">
+        <button onclick="testEndpoint('setup', document.getElementById('setupUrl').value)">Test Setup Endpoint</button>
+        <div id="setupResult" class="result"></div>
+    </div>
+    
+    <div class="card">
+        <div class="header">
+            <h3>3. Custom API Test</h3>
+            <div id="customStatus"></div>
+        </div>
+        <div class="details">Test any API endpoint with custom settings.</div>
+        <input type="text" id="customUrl" value="https://businesscrm-suix99spo-simons-projects-94c78eac.vercel.app/api/users">
+        
+        <label for="method">Method:</label>
+        <select id="method">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+        </select>
+        
+        <label for="body">Request Body (JSON):</label>
+        <textarea id="body" rows="4" style="width: 100%; margin-bottom: 15px;"></textarea>
+        
+        <button onclick="testCustomEndpoint()">Test Custom Endpoint</button>
+        <div id="customResult" class="result"></div>
+    </div>
+
+    <div class="card">
+        <div class="header">
+            <h3>4. Debug Information</h3>
+        </div>
+        <div class="details">Helpful details for troubleshooting.</div>
+        <pre id="debug" class="result">
+Origin: <script>document.write(window.location.origin)</script>
+User Agent: <script>document.write(navigator.userAgent)</script>
+Browser: <script>document.write(navigator.appName + ' ' + navigator.appVersion)</script>
+        </pre>
+    </div>
+
+    <script>
+        // Helper function to set status indicators
+        function setStatus(id, success, text) {
+            const el = document.getElementById(id + 'Status');
+            el.className = 'status ' + (success ? 'status-success' : 'status-error');
+            el.textContent = text || (success ? 'SUCCESS' : 'FAILED');
+        }
+
+        // Generic endpoint test function
+        async function testEndpoint(type, url) {
+            const resultElement = document.getElementById(`${type}Result`);
+            
+            resultElement.innerHTML = 'Testing...';
+            resultElement.className = 'result';
+            
+            try {
+                // Add a cache-busting parameter
+                const cacheBuster = `?_cb=${Date.now()}`;
+                const fullUrl = url + cacheBuster;
+                
+                console.log(`Testing ${type} endpoint at ${fullUrl}`);
+                
+                // Make the request with detailed error handling
+                const response = await fetch(fullUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    mode: 'cors' // Explicitly request CORS
+                });
+                
+                // Get response details
+                const status = response.status;
+                const statusText = response.statusText;
+                const headers = {};
+                
+                // Convert headers to a plain object
+                for (const [key, value] of response.headers.entries()) {
+                    headers[key] = value;
+                }
+                
+                // Try to parse the response as JSON
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    data = await response.text();
+                }
+                
+                // Show success
+                resultElement.innerHTML = `Status: ${status} ${statusText}\n\n${JSON.stringify({
+                    url: fullUrl,
+                    success: response.ok,
+                    data,
+                    headers
+                }, null, 2)}`;
+                
+                resultElement.className = response.ok ? 'result success' : 'result error';
+                setStatus(type, response.ok, `${status} ${statusText}`);
+                
+            } catch (error) {
+                // Enhanced error logging
+                console.error(`Error testing ${type} endpoint:`, error);
+                
+                resultElement.innerHTML = `ERROR: ${error.message}\n\nDetails:\n${JSON.stringify({
+                    url,
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack,
+                    type: error.type,
+                    isCORSError: error.message.includes('CORS')
+                }, null, 2)}`;
+                
+                resultElement.className = 'result error';
+                setStatus(type, false, 'ERROR');
+            }
+        }
+        
+        // Custom endpoint test function
+        async function testCustomEndpoint() {
+            const url = document.getElementById('customUrl').value;
+            const method = document.getElementById('method').value;
+            const bodyText = document.getElementById('body').value;
+            const resultElement = document.getElementById('customResult');
+            
+            resultElement.innerHTML = 'Testing...';
+            resultElement.className = 'result';
+            
+            try {
+                // Prepare fetch options
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    mode: 'cors'
+                };
+                
+                // Add body for POST, PUT requests
+                if (method !== 'GET' && method !== 'HEAD' && bodyText.trim()) {
+                    try {
+                        options.body = JSON.stringify(JSON.parse(bodyText));
+                    } catch (e) {
+                        resultElement.innerHTML = `Invalid JSON in request body: ${e.message}`;
+                        resultElement.className = 'result error';
+                        setStatus('custom', false, 'JSON ERROR');
+                        return;
+                    }
+                }
+                
+                // Add a cache-busting parameter for GET requests
+                const cacheBuster = method === 'GET' ? `?_cb=${Date.now()}` : '';
+                const fullUrl = url + cacheBuster;
+                
+                // Make the request
+                const response = await fetch(fullUrl, options);
+                
+                // Get response details
+                const status = response.status;
+                const statusText = response.statusText;
+                const headers = {};
+                
+                // Convert headers to a plain object
+                for (const [key, value] of response.headers.entries()) {
+                    headers[key] = value;
+                }
+                
+                // Try to parse the response as JSON
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    data = await response.text();
+                }
+                
+                // Show success
+                resultElement.innerHTML = `Status: ${status} ${statusText}\n\n${JSON.stringify({
+                    url: fullUrl,
+                    method,
+                    success: response.ok,
+                    data,
+                    headers
+                }, null, 2)}`;
+                
+                resultElement.className = response.ok ? 'result success' : 'result error';
+                setStatus('custom', response.ok, `${status} ${statusText}`);
+                
+            } catch (error) {
+                // Enhanced error logging
+                console.error('Error in custom test:', error);
+                
+                resultElement.innerHTML = `ERROR: ${error.message}\n\nDetails:\n${JSON.stringify({
+                    url,
+                    method,
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack,
+                    type: error.type,
+                    isCORSError: error.message.includes('CORS')
+                }, null, 2)}`;
+                
+                resultElement.className = 'result error';
+                setStatus('custom', false, 'ERROR');
+            }
+        }
+    </script>
+</body>
+</html>
