@@ -5,18 +5,48 @@ import { API_CONFIG } from '../config/environment';
 // Use the centralized environment configuration for API settings
 console.log('API URL being used:', API_CONFIG.baseUrl); // Debug log to verify URL
 
+// Ensure the baseURL is an absolute URL in production to avoid proxy issues
+const baseURL = process.env.NODE_ENV === 'production' && !API_CONFIG.baseUrl.startsWith('http')
+  ? `https://businesscrm-suix99spo-simons-projects-94c78eac.vercel.app/api`
+  : API_CONFIG.baseUrl;
+
+console.log('Final baseURL for axios:', baseURL); // Additional debug log
+
 // Simple in-memory cache for GET requests
 const cache = new Map();
 const CACHE_DURATION = process.env.REACT_APP_CACHE_DURATION ? 
   parseInt(process.env.REACT_APP_CACHE_DURATION) : 5 * 60 * 1000; // 5 minutes by default
 
 const api = axios.create({
-  baseURL: API_CONFIG.baseUrl,
+  baseURL: baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
   timeout: API_CONFIG.timeout,
 });
+
+// Test API connection function - added to fix build error
+export const testApiConnection = async () => {
+  try {
+    const response = await api.get('/health');
+    return {
+      success: true,
+      data: response.data,
+      error: null
+    };
+  } catch (error) {
+    console.error('API connection test failed:', error);
+    return {
+      success: false,
+      data: null,
+      error: {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      }
+    };
+  }
+};
 
 // Add response interceptor for error handling
 api.interceptors.response.use(
@@ -146,11 +176,6 @@ export const clearApiCacheFor = (url) => {
     }
   }
 };
-
-// Add compression for production
-if (process.env.NODE_ENV === 'production') {
-  api.defaults.headers['Accept-Encoding'] = 'gzip, deflate, br';
-}
 
 // Add special configuration for Vercel deployment
 // Detect if we're in a Vercel production environment
