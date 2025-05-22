@@ -1,6 +1,7 @@
-// api/users/check-setup.js - Direct serverless function for user setup check
+// api/users/check-setup.js
 const mongoose = require('mongoose');
 const User = require('../../backend/models/User');
+const allowCors = require('../serverless');
 
 // Connect to MongoDB function
 const connectMongo = async () => {
@@ -18,25 +19,10 @@ const connectMongo = async () => {
   }
 };
 
-// This is a serverless function that will be executed when the endpoint is called
-module.exports = async (req, res) => {
-  // Set CORS headers directly on the response
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins for now
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,PUT,DELETE');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
-  );
-
-  // Handle OPTIONS request (preflight)
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
+// Handler function
+const checkSetupHandler = async (req, res) => {
   // Only allow GET requests
-  if (req.method !== 'GET') {
+  if (req.method !== 'GET' && req.method !== 'OPTIONS') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
@@ -60,3 +46,6 @@ module.exports = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// Export the handler wrapped with CORS middleware
+module.exports = allowCors(checkSetupHandler);

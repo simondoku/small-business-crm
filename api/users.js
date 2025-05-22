@@ -1,8 +1,9 @@
-// api/users.js - Direct serverless function for user registration
+// api/users.js
 const mongoose = require('mongoose');
 const User = require('../backend/models/User');
 const bcrypt = require('bcryptjs');
 const generateToken = require('../backend/utils/generateToken');
+const allowCors = require('./serverless');
 
 // Connect to MongoDB function
 const connectMongo = async () => {
@@ -20,30 +21,15 @@ const connectMongo = async () => {
   }
 };
 
-// Main handler function
-module.exports = async (req, res) => {
-  // Set CORS headers directly on the response
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins for now
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST,PUT,DELETE');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
-  );
-
-  // Handle OPTIONS request (preflight)
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
+// Registration handler function
+const registrationHandler = async (req, res) => {
   // Only process POST requests for registration
-  if (req.method !== 'POST') {
+  if (req.method !== 'POST' && req.method !== 'OPTIONS') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
   try {
-    console.log('Registration request received:', req.body);
+    console.log('Registration request received:', JSON.stringify(req.body));
     
     // Connect to MongoDB
     const db = await connectMongo();
@@ -73,7 +59,6 @@ module.exports = async (req, res) => {
       userRole = 'admin';
     } else if (role === 'admin') {
       // If the user requested admin role, validate it
-      // In this implementation, we're allowing the admin role selection during registration
       userRole = 'admin';
     }
 
@@ -110,3 +95,6 @@ module.exports = async (req, res) => {
     });
   }
 };
+
+// Export the handler wrapped with CORS middleware
+module.exports = allowCors(registrationHandler);
