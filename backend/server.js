@@ -26,12 +26,42 @@ const app = express();
 const PORT = process.env.PORT || 5003; // Updated to default to 5003 to match .env
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
+// Temporarily allow all origins during development and deployment transition
+app.use(cors({
+  origin: '*', // Allow all origins temporarily
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  maxAge: 86400
+}));
+
+// Enable pre-flight across-the-board for all routes
+app.options('*', cors());
+
+// Manual CORS headers for extra assurance
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  
+  // Handle preflight OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+  
+  next();
+});
+
 // Connect to MongoDB
 const connectDB = require('./config/db');
 connectDB();
 
-// Apply security headers
-app.use(helmet());
+// Apply security headers - configured for cross-origin access
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false, // Disable CSP temporarily to debug
+}));
 
 // Compression middleware for production
 app.use(compression({
@@ -59,8 +89,7 @@ const apiLimiter = rateLimit({
 // Apply rate limiting to all API routes
 app.use('/api/', apiLimiter);
 
-// Middleware
-app.use(cors());
+// Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -74,7 +103,7 @@ if (NODE_ENV === 'development') {
   }));
 }
 
-// API Routes
+// API Routes - all prefixed with /api for consistency
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/customers', customerRoutes);
@@ -88,16 +117,15 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', environment: NODE_ENV });
 });
 
-// Serve static assets in production
-if (NODE_ENV === 'production') {
-  // Set static folder
-  app.use(express.static(path.join(__dirname, '../build')));
-
-  // Serve the index.html file for any request that's not an API route
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../build', 'index.html'));
+// Root route returns API information instead of serving frontend
+app.get('/', (req, res) => {
+  res.status(200).json({
+    message: 'Small Business CRM API is running',
+    version: '1.0',
+    environment: NODE_ENV,
+    documentation: '/api/docs' // If you implement API documentation later
   });
-}
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -114,5 +142,5 @@ app.use((err, req, res, next) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running in ${NODE_ENV} mode on port ${PORT}`);
+  console.log(`Backend API server running in ${NODE_ENV} mode on port ${PORT}`);
 });
