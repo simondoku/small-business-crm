@@ -2,6 +2,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '../services/api';
 import { logoutUser } from '../services/userService';
+import axios from 'axios';
 
 const AuthContext = createContext();
 
@@ -53,15 +54,25 @@ export const AuthProvider = ({ children }) => {
     // Login user
     const login = async (email, password) => {
         try {
-            const response = await api.post('/users/login', { email, password });
+            console.log('Attempting login with API URL:', api.defaults.baseURL);
+            
+            // Force absolute URL for login to bypass any URL transformation issues
+            const loginUrl = 'https://businesscrm-suix99spo-simons-projects-94c78eac.vercel.app/api/users/login';
+            console.log('Using direct login URL:', loginUrl);
+            
+            const response = await axios.post(loginUrl, { email, password });
             
             if (response.data) {
+                console.log('Login successful, user data received');
                 setUser(response.data);
                 localStorage.setItem('user', JSON.stringify(response.data));
                 api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
                 return { success: true, data: response.data };
             }
         } catch (error) {
+            console.error('Login error:', error.message);
+            console.error('Error response:', error.response?.data);
+            console.error('Request URL that failed:', error.config?.url);
             return {
                 success: false,
                 message: error.response?.data?.message || 'Login failed. Please check your credentials.'
@@ -69,40 +80,31 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // Register new user - first user is admin
+    // Register new user
     const register = async (userData) => {
         try {
-            // Configure a longer timeout specifically for the registration request
             const response = await api.post('/users', userData, {
                 timeout: 60000, // 60 seconds for registration specifically
             });
             
-            if (response.data.success) {
-                // Update initialization status when successful admin registration occurs
+            if (response.data && response.data.success) {
+                // Update initialization status if a new admin was successfully registered
                 if (response.data.role === 'admin') {
                     setInitialized(true);
                     setHasAdmin(true);
                 }
-                
-                // If this is the first login after registration, set the user
-                if (!user) {
-                    setUser(response.data);
-                    localStorage.setItem('user', JSON.stringify(response.data));
-                    api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-                }
+                // Registration is successful, return data. User will be redirected to login.
+                return { success: true, data: response.data };
+            } else {
+                // Handle cases where backend returns success:false or unexpected structure
+                return { 
+                    success: false, 
+                    message: response.data?.message || 'Registration failed due to an unexpected server response.' 
+                };
             }
-            
-            return { success: true, data: response.data };
         } catch (error) {
             console.error('Registration error:', error);
             
-            // Check if this error is because system is already initialized
-            if (error.response?.data?.initialized) {
-                setInitialized(true);
-                setHasAdmin(true);
-            }
-            
-            // Handle timeout errors specifically
             if (error.code === 'ECONNABORTED') {
                 return {
                     success: false,
@@ -113,8 +115,7 @@ export const AuthProvider = ({ children }) => {
             
             return {
                 success: false,
-                message: error.response?.data?.message || 'Registration failed. Please try again.',
-                initialized: error.response?.data?.initialized
+                message: error.response?.data?.message || 'Registration failed. Please try again.'
             };
         }
     };
@@ -151,7 +152,7 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         checkPermission,
-        authError // Expose authError to the context consumers
+        authError
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
