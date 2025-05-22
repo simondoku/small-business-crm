@@ -1,163 +1,105 @@
 // src/pages/ApiTest.js
 import React, { useState, useEffect } from 'react';
-import { testApiConnection } from '../services/api';
+import axios from 'axios';
 
 const ApiTest = () => {
-  const [apiStatus, setApiStatus] = useState({
-    loading: true,
-    success: null,
-    data: null,
-    error: null
-  });
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [directUrl, setDirectUrl] = useState('https://businesscrm-suix99spo-simons-projects-94c78eac.vercel.app/api/health');
 
-  const [manualEndpoint, setManualEndpoint] = useState('/debug');
-  const [manualResponse, setManualResponse] = useState(null);
-  const [manualLoading, setManualLoading] = useState(false);
-  const [manualError, setManualError] = useState(null);
-
-  useEffect(() => {
-    const checkApi = async () => {
-      try {
-        const result = await testApiConnection();
-        setApiStatus({
-          loading: false,
-          success: result.success,
-          data: result.data,
-          error: result.error
-        });
-      } catch (error) {
-        setApiStatus({
-          loading: false,
-          success: false,
-          data: null,
-          error: {
-            message: error.message,
-          }
-        });
-      }
-    };
-
-    checkApi();
-  }, []);
-
-  const testManualEndpoint = async () => {
-    setManualLoading(true);
-    setManualResponse(null);
-    setManualError(null);
-
+  const runTest = async () => {
+    setLoading(true);
+    setResults([]);
+    
     try {
-      const { default: api } = await import('../services/api');
-      const response = await api.get(manualEndpoint);
-      setManualResponse(response.data);
+      // Test 1: Direct axios call to the full URL
+      const result1 = await axios.get(directUrl, { timeout: 10000 })
+        .then(res => ({ success: true, data: res.data, status: res.status }))
+        .catch(err => ({ 
+          success: false, 
+          error: err.message, 
+          status: err.response?.status,
+          data: err.response?.data
+        }));
+      
+      setResults(prev => [...prev, {
+        name: 'Direct Axios Call',
+        url: directUrl,
+        result: result1
+      }]);
+      
     } catch (error) {
-      setManualError({
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data
-      });
+      console.error("Test execution error:", error);
+      setResults(prev => [...prev, {
+        name: 'Test Execution Error',
+        error: error.message
+      }]);
     } finally {
-      setManualLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">API Connection Test</h1>
+    <div className="container mx-auto p-4 max-w-4xl">
+      <h1 className="text-2xl font-bold mb-4">API Connectivity Test</h1>
       
-      <div className="mb-8 bg-gray-100 p-4 rounded">
-        <h2 className="text-xl font-semibold mb-2">Automatic API Test</h2>
-        {apiStatus.loading ? (
-          <p>Testing API connection...</p>
-        ) : apiStatus.success ? (
-          <div>
-            <div className="flex items-center mb-2">
-              <span className="bg-green-500 text-white px-2 py-1 rounded mr-2">SUCCESS</span>
-              <span>API is working properly!</span>
-            </div>
-            <div className="mt-4">
-              <h3 className="font-semibold">Response Data:</h3>
-              <pre className="bg-gray-800 text-green-400 p-4 rounded overflow-auto max-h-96">
-                {JSON.stringify(apiStatus.data, null, 2)}
-              </pre>
-            </div>
-          </div>
-        ) : (
-          <div>
-            <div className="flex items-center mb-2">
-              <span className="bg-red-500 text-white px-2 py-1 rounded mr-2">FAILED</span>
-              <span>Could not connect to API</span>
-            </div>
-            <div className="mt-4">
-              <h3 className="font-semibold">Error:</h3>
-              <pre className="bg-gray-800 text-red-400 p-4 rounded overflow-auto max-h-96">
-                {JSON.stringify(apiStatus.error, null, 2)}
-              </pre>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="mb-8 bg-gray-100 p-4 rounded">
-        <h2 className="text-xl font-semibold mb-2">Test Custom Endpoint</h2>
-        <div className="flex mb-4">
-          <input
-            type="text"
-            value={manualEndpoint}
-            onChange={(e) => setManualEndpoint(e.target.value)}
-            className="flex-grow p-2 border rounded"
-            placeholder="/users"
+      <div className="mb-6 p-4 bg-gray-100 rounded-lg">
+        <div className="mb-4">
+          <label className="block text-gray-700 mb-2">Test URL:</label>
+          <input 
+            type="text" 
+            value={directUrl}
+            onChange={(e) => setDirectUrl(e.target.value)}
+            className="w-full p-2 border rounded"
           />
-          <button
-            onClick={testManualEndpoint}
-            disabled={manualLoading}
-            className="ml-2 bg-blue-500 text-white px-4 py-2 rounded disabled:bg-blue-300"
-          >
-            {manualLoading ? 'Testing...' : 'Test'}
-          </button>
         </div>
-
-        {manualLoading ? (
-          <p>Testing endpoint...</p>
-        ) : manualResponse ? (
-          <div>
-            <h3 className="font-semibold">Response:</h3>
-            <pre className="bg-gray-800 text-green-400 p-4 rounded overflow-auto max-h-96">
-              {JSON.stringify(manualResponse, null, 2)}
-            </pre>
-          </div>
-        ) : manualError ? (
-          <div>
-            <h3 className="font-semibold">Error:</h3>
-            <pre className="bg-gray-800 text-red-400 p-4 rounded overflow-auto max-h-96">
-              {JSON.stringify(manualError, null, 2)}
-            </pre>
-          </div>
-        ) : null}
+        
+        <button 
+          onClick={runTest} 
+          disabled={loading}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
+        >
+          {loading ? 'Running Tests...' : 'Run Test'}
+        </button>
       </div>
-
-      <div className="bg-gray-100 p-4 rounded">
-        <h2 className="text-xl font-semibold mb-2">API Configuration</h2>
-        <table className="w-full border-collapse">
-          <tbody>
-            <tr className="border-b">
-              <td className="py-2 font-medium">Base URL:</td>
-              <td>{window.location.protocol}//{window.location.host}/api</td>
-            </tr>
-            <tr className="border-b">
-              <td className="py-2 font-medium">Environment:</td>
-              <td>{process.env.NODE_ENV}</td>
-            </tr>
-            <tr className="border-b">
-              <td className="py-2 font-medium">Debug Endpoint:</td>
-              <td>/api/debug</td>
-            </tr>
-            <tr>
-              <td className="py-2 font-medium">Health Check:</td>
-              <td>/api/health</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      
+      {results.length > 0 && (
+        <div className="border rounded-lg overflow-hidden">
+          <h2 className="text-xl font-semibold p-4 bg-gray-200">Test Results</h2>
+          
+          {results.map((test, index) => (
+            <div key={index} className="border-t p-4">
+              <h3 className="font-medium text-lg">{test.name}</h3>
+              {test.url && <p className="text-gray-600 text-sm mb-2">URL: {test.url}</p>}
+              
+              {test.error ? (
+                <div className="mt-2 p-3 bg-red-100 text-red-800 rounded">
+                  <p className="font-medium">Error: {test.error}</p>
+                  {test.result?.status && <p>Status: {test.result.status}</p>}
+                  {test.result?.data && (
+                    <pre className="mt-2 p-2 bg-gray-800 text-gray-200 rounded overflow-x-auto">
+                      {JSON.stringify(test.result.data, null, 2)}
+                    </pre>
+                  )}
+                </div>
+              ) : (
+                test.result && (
+                  <div className={`mt-2 p-3 ${test.result.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} rounded`}>
+                    <p className="font-medium">
+                      Status: {test.result.status || (test.result.success ? 'Success' : 'Failed')}
+                    </p>
+                    {test.result.data && (
+                      <pre className="mt-2 p-2 bg-gray-800 text-gray-200 rounded overflow-x-auto">
+                        {JSON.stringify(test.result.data, null, 2)}
+                      </pre>
+                    )}
+                  </div>
+                )
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
