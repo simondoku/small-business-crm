@@ -80,7 +80,13 @@ export const AuthProvider = ({ children }) => {
     // Register new user
     const register = async (userData) => {
         try {
-            const response = await api.post('/users', userData, {
+            console.log('Attempting registration with API URL:', api.defaults.baseURL);
+            
+            // Use direct axios call with full URL to bypass any URL transformation issues
+            const registerUrl = 'https://businesscrm-suix99spo-simons-projects-94c78eac.vercel.app/api/users';
+            console.log('Using direct registration URL:', registerUrl);
+            
+            const response = await axios.post(registerUrl, userData, {
                 timeout: 60000, // 60 seconds for registration specifically
             });
             
@@ -100,7 +106,9 @@ export const AuthProvider = ({ children }) => {
                 };
             }
         } catch (error) {
-            console.error('Registration error:', error);
+            console.error('Registration error:', error.message);
+            console.error('Error response:', error.response?.data);
+            console.error('Request URL that failed:', error.config?.url);
             
             if (error.code === 'ECONNABORTED') {
                 return {
