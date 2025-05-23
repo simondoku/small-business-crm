@@ -24,6 +24,12 @@ const userSchema = mongoose.Schema(
             enum: ['admin', 'staff'],
             default: 'staff',
         },
+        // Track which admin created this user
+        createdBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            default: null
+        },
         // New fields for transaction tracking and payment status
         transactionCount: {
             type: Number,

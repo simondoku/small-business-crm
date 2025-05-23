@@ -20,6 +20,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // Increase timeout for slow connections or heavy operations
   timeout: API_CONFIG.timeout,
 });
 

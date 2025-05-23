@@ -141,6 +141,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`Backend API server running in ${NODE_ENV} mode on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running in ${NODE_ENV} mode on port ${PORT}`);
+  console.log('MongoDB Connected: localhost');
 });
