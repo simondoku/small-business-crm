@@ -82,10 +82,18 @@ const getUserActivity = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized' });
         }
         
-        const user = await User.findById(userId).select('name email loginHistory lastLogin lastLogout');
+        const user = await User.findById(userId).select('name email loginHistory lastLogin lastLogout createdBy');
         
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
+        }
+        
+        // Admins can only view activity for users they created or themselves
+        const canView = user._id.toString() === req.user._id.toString() || 
+                       (user.createdBy && user.createdBy.toString() === req.user._id.toString());
+        
+        if (!canView) {
+            return res.status(403).json({ message: 'You can only view activity for users you created' });
         }
         
         res.json({
@@ -138,12 +146,19 @@ const registerUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Create new user without relying on middleware
-        const user = await User.create({
+        const userData = {
             name,
             email,
             password: hashedPassword,
             role: userRole,
-        });
+        };
+
+        // If there's a logged-in admin creating this user, track who created it
+        if (req.user && req.user.role === 'admin' && userRole !== 'admin') {
+            userData.createdBy = req.user._id;
+        }
+
+        const user = await User.create(userData);
 
         if (user) {
             console.log('User created successfully:', user._id);
@@ -182,6 +197,14 @@ const updateUser = async (req, res) => {
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
+        }
+        
+        // Admins can only update users they created or themselves
+        const canUpdate = user._id.toString() === req.user._id.toString() || 
+                         (user.createdBy && user.createdBy.toString() === req.user._id.toString());
+        
+        if (!canUpdate) {
+            return res.status(403).json({ message: 'You can only update users you created' });
         }
         
         // Prevent admins from demoting themselves
@@ -245,6 +268,11 @@ const deleteUser = async (req, res) => {
             return res.status(400).json({ message: 'Admins cannot delete their own account' });
         }
         
+        // Admins can only delete users they created
+        if (user.createdBy && user.createdBy.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'You can only delete users you created' });
+        }
+        
         // Check if this is the last admin
         if (user.role === 'admin') {
             const adminCount = await User.countDocuments({ role: 'admin' });
@@ -300,12 +328,23 @@ const checkSetup = async (req, res) => {
 // Get all users (admin only)
 const getUsers = async (req, res) => {
     try {
-        // Only admins can view all users
+        // Only admins can view users
         if (req.user.role !== 'admin') {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        const users = await User.find({}).select('-password -loginHistory');
+        // Admins can only see users they created, plus themselves
+        const query = {
+            $or: [
+                { createdBy: req.user._id }, // Users created by this admin
+                { _id: req.user._id }        // The admin themselves
+            ]
+        };
+
+        const users = await User.find(query)
+            .select('-password -loginHistory')
+            .populate('createdBy', 'name email');
+        
         res.json(users);
     } catch (error) {
         res.status(500).json({ message: error.message });
