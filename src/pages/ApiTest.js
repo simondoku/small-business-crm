@@ -5,7 +5,7 @@ import axios from 'axios';
 const ApiTest = () => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [directUrl, setDirectUrl] = useState('https://businesscrm-suix99spo-simons-projects-94c78eac.vercel.app/api/health');
+  const [directUrl, setDirectUrl] = useState('https://businesscrm-hkz52byai-simons-projects-94c78eac.vercel.app/api/health');
 
   const runTest = async () => {
     setLoading(true);

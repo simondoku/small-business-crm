@@ -136,11 +136,20 @@ const Login = () => {
                         </div>
                     )}
 
-                    {initialized && (
-                        <p className="mt-4 text-center text-sm text-gray-400">
-                            Don't have an account? <Link to="/" className="text-primary-400 hover:text-primary-300">Return to home</Link>
+                    {/* Always show registration option regardless of initialization status */}
+                    <div className="mt-6 text-center">
+                        <p className="text-sm text-gray-400 mb-2">
+                            Don't have an account?
                         </p>
-                    )}
+                        <div className="space-x-4">
+                            <Link to="/setup" className="inline-block text-sm text-primary hover:text-primary-300">
+                                Create Account
+                            </Link>
+                            <Link to="/" className="text-sm text-gray-400 hover:text-gray-300">
+                                Return to home
+                            </Link>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

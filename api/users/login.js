@@ -44,7 +44,7 @@ const loginHandler = async (req, res) => {
     // Find the user by email
     const user = await User.findOne({ email });
 
-    if (user && (await bcrypt.compare(password, user.password))) {
+    if (user && (await user.matchPassword(password))) {
       console.log('Login successful for user:', user._id); // Debug log
       
       // Record login activity

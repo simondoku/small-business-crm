@@ -83,7 +83,7 @@ export const AuthProvider = ({ children }) => {
             console.log('Attempting registration with API URL:', api.defaults.baseURL);
             
             // Use direct axios call with full URL to bypass any URL transformation issues
-            const registerUrl = 'https://businesscrm-suix99spo-simons-projects-94c78eac.vercel.app/api/users';
+            const registerUrl = 'https://businesscrm-api.vercel.app/api/users';
             console.log('Using direct registration URL:', registerUrl);
             
             const response = await axios.post(registerUrl, userData, {

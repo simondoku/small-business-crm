@@ -13,7 +13,7 @@ export const API_CONFIG = {
   // This should be set during deployment to point to your backend service URL
   baseUrl: isDevelopment 
     ? 'http://localhost:5003/api' 
-    : (process.env.REACT_APP_API_URL || 'https://businesscrm-suix99spo-simons-projects-94c78eac.vercel.app/api'),
+    : (process.env.REACT_APP_API_URL || 'https://businesscrm-api.vercel.app/api'),
   timeout: 30000,
   retryAttempts: 2
 };

@@ -5,10 +5,8 @@ import { API_CONFIG } from '../config/environment';
 // Use the centralized environment configuration for API settings
 console.log('API URL being used:', API_CONFIG.baseUrl); // Debug log to verify URL
 
-// Ensure the baseURL is an absolute URL in production to avoid proxy issues
-const baseURL = process.env.NODE_ENV === 'production' 
-  ? 'https://businesscrm-suix99spo-simons-projects-94c78eac.vercel.app/api'
-  : API_CONFIG.baseUrl;
+// Use the environment configuration consistently across development and production
+const baseURL = process.env.REACT_APP_API_URL || API_CONFIG.baseUrl;
 
 console.log('Final baseURL for axios:', baseURL); // Additional debug log
 

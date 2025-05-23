@@ -4,6 +4,12 @@ const User = require('../models/User');
 
 // Protect routes - verify token and attach user to request
 const protect = async (req, res, next) => {
+  // Always allow OPTIONS requests to pass through without authentication
+  // This is crucial for CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
   let token;
 
   // Check for token in headers
@@ -43,6 +49,11 @@ const protect = async (req, res, next) => {
 
 // Admin middleware - verify user is an admin
 const admin = (req, res, next) => {
+  // Always allow OPTIONS requests to pass through
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
   if (req.user && req.user.role === 'admin') {
     next();
   } else {
@@ -52,6 +63,11 @@ const admin = (req, res, next) => {
 
 // Staff middleware - verify user is at least staff (staff or admin)
 const staff = (req, res, next) => {
+  // Always allow OPTIONS requests to pass through
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
   if (req.user && (req.user.role === 'staff' || req.user.role === 'admin')) {
     next();
   } else {

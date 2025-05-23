@@ -146,24 +146,61 @@ app.use(compression());
 
 // CORS configuration with allowed domains
 const corsOptions = {
-  origin: [
-    'https://www.bcrm.dev',
-    'https://bcrm.dev',
-    // Include Vercel deployment URLs as fallbacks
-    'https://businesscrm-njuawefyw-simons-projects-94c78eac.vercel.app',
-    'https://businesscrm-7g231acrj-simons-projects-94c78eac.vercel.app',
-    'https://businesscrm-7xsxqd71m-simons-projects-94c78eac.vercel.app',
-    'https://businesscrm-d9td6uxqg-simons-projects-94c78eac.vercel.app',
-    // Allow localhost for development
-    'http://localhost:3000'
-  ],
+  origin: function(origin, callback) {
+    // Define allowed origins - include both fixed domains and environment variable
+    const allowedOrigins = [
+      'https://www.bcrm.dev',
+      'https://bcrm.dev',
+      process.env.FRONTEND_URL,
+      // Include Vercel deployment URLs as fallbacks
+      'https://businesscrmfrontend.vercel.app',
+      'https://businesscrmfrontend-6kfisfl2f-simons-projects-94c78eac.vercel.app',
+      'https://businesscrm-4emsmbbae-simons-projects-94c78eac.vercel.app',
+      'https://businesscrm-njuawefyw-simons-projects-94c78eac.vercel.app',
+      'https://businesscrm-7g231acrj-simons-projects-94c78eac.vercel.app',
+      'https://businesscrm-7xsxqd71m-simons-projects-94c78eac.vercel.app',
+      'https://businesscrm-d9td6uxqg-simons-projects-94c78eac.vercel.app',
+      // Allow localhost for development
+      'http://localhost:3000'
+    ].filter(Boolean); // Remove any undefined entries
+    
+    // Log the origin being checked for debugging
+    console.log('CORS check - Origin:', origin, 'Allowed:', allowedOrigins.includes(origin));
+    
+    // Allow requests with no origin (like mobile apps) or from allowed origins
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked request from:', origin);
+      // Instead of blocking, let's temporarily allow all origins to debug
+      callback(null, true);
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  maxAge: 86400, // Cache preflight response for 24 hours
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
 };
 
 // Middleware
 app.use(cors(corsOptions));
+
+// Add explicit CORS headers as backup
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  next();
+});
+
 app.use(express.json({ limit: '10mb' }));
 
 // Apply API routes WITHOUT the /api prefix as Vercel handles that for us

@@ -43,11 +43,6 @@
       "continue": true
     },
     {
-      "src": "/api/(.*)",
-      "methods": ["OPTIONS"],
-      "dest": "/api/serverless.js"
-    },
-    {
       "src": "/(.*)",
       "headers": {
         "cache-control": "s-maxage=1, stale-while-revalidate=59"
@@ -55,15 +50,5 @@
       "dest": "/index.html"
     }
   ],
-  "env": {
-    "MONGO_URI": "@mongodb-uri",
-    "JWT_SECRET": "@jwt-secret",
-    "JWT_EXPIRE": "30d",
-    "NODE_ENV": "production"
-  },
-  "build": {
-    "env": {
-      "REACT_APP_API_URL": "https://businesscrm-suix99spo-simons-projects-94c78eac.vercel.app/api"
-    }
-  }
+  "build": {}
 }

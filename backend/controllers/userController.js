@@ -111,37 +111,32 @@ const registerUser = async (req, res) => {
 
         const { name, email, password, role } = req.body;
 
+        // Validate required fields
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: 'Please provide name, email, and password' });
+        }
+
         // Check if user already exists
         const userExists = await User.findOne({ email });
         if (userExists) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        // Check for existing admin users - more reliable than a simple count
+        // Check for existing admin users
         const adminExists = await User.findOne({ role: 'admin' });
         console.log('Admin exists check:', adminExists ? 'Yes' : 'No');
         
-        // If this is a setup request (first admin) and an admin already exists
-        if (!role && adminExists) {
-            return res.status(400).json({ 
-                message: 'System is already initialized with an admin account',
-                initialized: true
-            });
-        }
-
-        // Determine user role - admin if no admins exist and this is initial setup
-        const userRole = !adminExists ? 'admin' : (role || 'staff');
+        // Determine user role
+        // If no role specified and this is the first user, make them admin
+        // Otherwise use the role from request or default to staff
+        const userRole = (!role && !adminExists) ? 'admin' : (role || 'staff');
         console.log('Assigning role:', userRole);
 
-        // Hash password manually instead of relying on mongoose middleware
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        // Create new user without relying on middleware
+        // Create new user - let the model middleware handle password hashing
         const user = await User.create({
             name,
             email,
-            password: hashedPassword,
+            password, // Don't hash manually, let the pre('save') middleware handle it
             role: userRole,
         });
 
