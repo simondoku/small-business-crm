@@ -72,43 +72,6 @@ const logoutUser = async (req, res) => {
     }
 };
 
-// Get user activity history (admin only)
-const getUserActivity = async (req, res) => {
-    try {
-        const { userId } = req.params;
-        
-        // Only admins can view user activity
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({ message: 'Not authorized' });
-        }
-        
-        const user = await User.findById(userId).select('name email loginHistory lastLogin lastLogout createdBy');
-        
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        
-        // Admins can only view activity for users they created or themselves
-        const canView = user._id.toString() === req.user._id.toString() || 
-                       (user.createdBy && user.createdBy.toString() === req.user._id.toString());
-        
-        if (!canView) {
-            return res.status(403).json({ message: 'You can only view activity for users you created' });
-        }
-        
-        res.json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            lastLogin: user.lastLogin,
-            lastLogout: user.lastLogout,
-            loginHistory: user.loginHistory
-        });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
 // Register a new user
 const registerUser = async (req, res) => {
     try {
@@ -148,9 +111,14 @@ const registerUser = async (req, res) => {
             role: userRole,
         };
 
-        // If there's a logged-in admin creating this user, track who created it
-        if (req.user && req.user.role === 'admin' && userRole !== 'admin') {
+        // Track who created this user (for all user types, including admins)
+        // Only skip createdBy for the very first admin user
+        if (req.user && req.user.role === 'admin') {
             userData.createdBy = req.user._id;
+            console.log('Setting createdBy to:', req.user._id);
+        } else if (userRole === 'admin' && !adminExists) {
+            // This is the first admin user - no creator to track
+            console.log('First admin user - no createdBy field');
         }
 
         const user = await User.create(userData);
@@ -194,12 +162,12 @@ const updateUser = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
         
-        // Admins can only update users they created or themselves
-        const canUpdate = user._id.toString() === req.user._id.toString() || 
-                         (user.createdBy && user.createdBy.toString() === req.user._id.toString());
+        // Strict hierarchical check: admin can only update users they created + themselves
+        const canUpdate = user._id.toString() === req.user._id.toString() || // Can update themselves
+                         (user.createdBy && user.createdBy.toString() === req.user._id.toString()); // Users they created
         
         if (!canUpdate) {
-            return res.status(403).json({ message: 'You can only update users you created' });
+            return res.status(403).json({ message: 'You can only update users you created or yourself' });
         }
         
         // Prevent admins from demoting themselves
@@ -263,8 +231,10 @@ const deleteUser = async (req, res) => {
             return res.status(400).json({ message: 'Admins cannot delete their own account' });
         }
         
-        // Admins can only delete users they created
-        if (user.createdBy && user.createdBy.toString() !== req.user._id.toString()) {
+        // Strict hierarchical check: admin can only delete users they created
+        const canDelete = user.createdBy && user.createdBy.toString() === req.user._id.toString();
+        
+        if (!canDelete) {
             return res.status(403).json({ message: 'You can only delete users you created' });
         }
         
@@ -320,6 +290,43 @@ const checkSetup = async (req, res) => {
     }
 };
 
+// Get user activity history (admin only)
+const getUserActivity = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Only admins can view user activity
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+        
+        const user = await User.findById(userId).select('name email loginHistory lastLogin lastLogout createdBy');
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        // Strict hierarchical check: admin can only view activity for users they created + themselves
+        const canView = user._id.toString() === req.user._id.toString() || // Their own activity
+                       (user.createdBy && user.createdBy.toString() === req.user._id.toString()); // Users they created
+        
+        if (!canView) {
+            return res.status(403).json({ message: 'You can only view activity for users you created or yourself' });
+        }
+        
+        res.json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            lastLogin: user.lastLogin,
+            lastLogout: user.lastLogout,
+            loginHistory: user.loginHistory
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // Get all users (admin only)
 const getUsers = async (req, res) => {
     try {
@@ -328,7 +335,7 @@ const getUsers = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        // Admins can only see users they created, plus themselves
+        // Simple hierarchical query: admin can only see users they created + themselves
         const query = {
             $or: [
                 { createdBy: req.user._id }, // Users created by this admin
@@ -338,10 +345,13 @@ const getUsers = async (req, res) => {
 
         const users = await User.find(query)
             .select('-password -loginHistory')
-            .populate('createdBy', 'name email');
+            .populate('createdBy', 'name email')
+            .sort({ createdAt: -1 });
         
+        console.log(`Admin ${req.user._id} (${req.user.name}) can see ${users.length} users`);
         res.json(users);
     } catch (error) {
+        console.error('Error in getUsers:', error);
         res.status(500).json({ message: error.message });
     }
 };

@@ -66,13 +66,20 @@ const registrationHandler = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create user
-    const user = await User.create({
+    // Create new user - let the model middleware handle password hashing
+    const userData = {
       name,
       email,
-      password: hashedPassword,
+      password: hashedPassword, // Use the hashed password we created above
       role: userRole,
-    });
+    };
+
+    // Track who created this user (for all user types, including admins)
+    // Note: This API endpoint doesn't have req.user context, so createdBy won't be set here
+    // This is mainly for the initial setup process
+
+    // Create user
+    const user = await User.create(userData);
 
     if (user) {
       console.log('User created successfully:', user._id);
