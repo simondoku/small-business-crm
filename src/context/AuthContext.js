@@ -82,11 +82,8 @@ export const AuthProvider = ({ children }) => {
         try {
             console.log('Attempting registration with API URL:', api.defaults.baseURL);
             
-            // Use direct axios call with full URL to bypass any URL transformation issues
-            const registerUrl = 'https://businesscrm-api.vercel.app/api/users';
-            console.log('Using direct registration URL:', registerUrl);
-            
-            const response = await axios.post(registerUrl, userData, {
+            // Use the API instance which has the correct baseURL configuration
+            const response = await api.post('/users', userData, {
                 timeout: 60000, // 60 seconds for registration specifically
             });
             
@@ -96,6 +93,7 @@ export const AuthProvider = ({ children }) => {
                     setInitialized(true);
                     setHasAdmin(true);
                 }
+                
                 // Registration is successful, return data. User will be redirected to login.
                 return { success: true, data: response.data };
             } else {
@@ -110,6 +108,13 @@ export const AuthProvider = ({ children }) => {
             console.error('Error response:', error.response?.data);
             console.error('Request URL that failed:', error.config?.url);
             
+            // Check if this error is because system is already initialized
+            if (error.response?.data?.initialized) {
+                setInitialized(true);
+                setHasAdmin(true);
+            }
+            
+            // Handle timeout errors specifically
             if (error.code === 'ECONNABORTED') {
                 return {
                     success: false,
@@ -157,7 +162,7 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         checkPermission,
-        authError
+        authError // Expose authError to the context consumers
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

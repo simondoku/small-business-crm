@@ -9,11 +9,10 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 
 // API Configuration
 export const API_CONFIG = {
-  // Use environment variable for backend URL in production
-  // This should be set during deployment to point to your backend service URL
+  // Always use localhost in development, fallback to relative path in production
   baseUrl: isDevelopment 
     ? 'http://localhost:5003/api' 
-    : (process.env.REACT_APP_API_URL || 'https://businesscrm-api.vercel.app/api'),
+    : (process.env.REACT_APP_API_URL || '/api'),
   timeout: 30000,
   retryAttempts: 2
 };

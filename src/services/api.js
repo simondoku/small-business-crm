@@ -5,18 +5,13 @@ import { API_CONFIG } from '../config/environment';
 // Use the centralized environment configuration for API settings
 console.log('API URL being used:', API_CONFIG.baseUrl); // Debug log to verify URL
 
-// Use the environment configuration consistently across development and production
-const baseURL = process.env.REACT_APP_API_URL || API_CONFIG.baseUrl;
-
-console.log('Final baseURL for axios:', baseURL); // Additional debug log
-
 // Simple in-memory cache for GET requests
 const cache = new Map();
 const CACHE_DURATION = process.env.REACT_APP_CACHE_DURATION ? 
   parseInt(process.env.REACT_APP_CACHE_DURATION) : 5 * 60 * 1000; // 5 minutes by default
 
 const api = axios.create({
-  baseURL: baseURL,
+  baseURL: API_CONFIG.baseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
