@@ -9,10 +9,10 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 
 // API Configuration
 export const API_CONFIG = {
-  // Always use localhost in development, fallback to relative path in production
+  // Always use localhost in development, use production API URL in production
   baseUrl: isDevelopment 
     ? 'http://localhost:5003/api' 
-    : (process.env.REACT_APP_API_URL || '/api'),
+    : (process.env.REACT_APP_API_URL || 'https://businesscrm-api.vercel.app/api'),
   timeout: 30000,
   retryAttempts: 2
 };

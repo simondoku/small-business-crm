@@ -1,7 +1,6 @@
 // backend/scripts/createAdmin.js
 require('dotenv').config();
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 
 mongoose.connect(process.env.MONGO_URI)
@@ -13,12 +12,11 @@ mongoose.connect(process.env.MONGO_URI)
             if (adminExists) {
                 console.log('Admin user already exists');
             } else {
-                // Create admin user
-                const hashedPassword = await bcrypt.hash('admin123', 10);
+                // Create admin user - let the model middleware handle password hashing
                 const admin = new User({
                     name: 'Admin User',
                     email: 'admin@example.com',
-                    password: hashedPassword,
+                    password: 'admin123', // Don't hash manually, let the pre('save') middleware handle it
                     role: 'admin'
                 });
 

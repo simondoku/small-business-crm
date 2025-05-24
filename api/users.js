@@ -62,15 +62,11 @@ const registrationHandler = async (req, res) => {
       userRole = 'admin';
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
     // Create new user - let the model middleware handle password hashing
     const userData = {
       name,
       email,
-      password: hashedPassword, // Use the hashed password we created above
+      password, // Don't hash manually, let the pre('save') middleware handle it
       role: userRole,
     };
 
