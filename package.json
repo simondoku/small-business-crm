@@ -2,6 +2,7 @@
   "name": "small-business-crm",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://businesscrmfrontend-muvsxrtl6-simons-projects-94c78eac.vercel.app",
   "dependencies": {
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^1.0.6",
