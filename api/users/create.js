@@ -1,29 +1,25 @@
-// api/users.js
+// api/users/create.js
 const mongoose = require("mongoose");
-const User = require("../backend/models/User");
-const bcrypt = require("bcryptjs");
-const generateToken = require("../backend/utils/generateToken");
-const allowCors = require("./serverless");
+const User = require("../../backend/models/User");
+const generateToken = require("../../backend/utils/generateToken");
+const allowCors = require("../serverless");
 const jwt = require("jsonwebtoken");
 
 // Global connection promise to reuse connections
 let connectionPromise = null;
 
-// Connect to MongoDB function with proper connection reuse for serverless
+// Connect to MongoDB function
 const connectMongo = async () => {
   try {
-    // Reuse existing connection if available
     if (mongoose.connection.readyState === 1) {
       return { connected: true };
     }
 
-    // If connection is in progress, wait for it
     if (connectionPromise) {
       await connectionPromise;
       return { connected: mongoose.connection.readyState === 1 };
     }
 
-    // Create new connection promise
     connectionPromise = mongoose.connect(process.env.MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -37,7 +33,7 @@ const connectMongo = async () => {
     return { connected: true };
   } catch (error) {
     console.error("MongoDB connection error:", error);
-    connectionPromise = null; // Reset promise on error
+    connectionPromise = null;
     return { connected: false, error: error.message };
   }
 };
@@ -66,23 +62,34 @@ const authenticateUser = async (req) => {
   }
 };
 
-// Add mock user for local development to bypass MongoDB issues
-const mockUser = {
-  _id: "507f1f77bcf86cd799439011",
-  name: "Test Admin",
-  email: "admin@test.com",
-  role: "admin",
-};
-
-// Registration handler function
-const registrationHandler = async (req, res) => {
-  // Only process POST requests for registration
+// Create user handler function (admin only)
+const createUserHandler = async (req, res) => {
   if (req.method !== "POST" && req.method !== "OPTIONS") {
     return res.status(405).json({ message: "Method Not Allowed" });
   }
 
   try {
-    console.log("Registration request received:", JSON.stringify(req.body));
+    console.log("Create user request received");
+
+    // Connect to database
+    const db = await connectMongo();
+    if (!db.connected) {
+      return res.status(500).json({
+        message: "Database connection failed",
+        error: db.error,
+      });
+    }
+
+    // Authenticate the requesting user
+    const auth = await authenticateUser(req);
+    if (!auth.authenticated) {
+      return res.status(401).json({ message: auth.error || "Invalid token" });
+    }
+
+    // Only admins can create users
+    if (auth.user.role !== "admin") {
+      return res.status(403).json({ message: "Not authorized" });
+    }
 
     const { name, email, password, role } = req.body;
 
@@ -90,68 +97,41 @@ const registrationHandler = async (req, res) => {
     if (!name || !email || !password) {
       return res
         .status(400)
-        .json({ message: "Please provide all required fields" });
+        .json({ message: "Please provide name, email, and password" });
     }
 
-    // Try MongoDB connection for production or non-mock users
-    const db = await connectMongo();
-    if (!db.connected) {
-      console.error("Database connection failed:", db.error);
-      return res
-        .status(500)
-        .json({ message: "Database connection failed", error: db.error });
-    }
-
-    // Check if user already exists with timeout
+    // Check if user already exists
     const userExists = await User.findOne({ email }).maxTimeMS(5000);
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Check if this is the first user in the system with timeout
+    // Check for existing admin users
     const adminExists = await User.findOne({ role: "admin" }).maxTimeMS(5000);
-    const isFirstUser = !adminExists;
+    console.log("Admin exists check:", adminExists ? "Yes" : "No");
 
-    // Determine role - first user is always admin, otherwise use provided role or default to staff
-    let userRole = "staff";
-    if (isFirstUser) {
-      userRole = "admin";
-    } else if (role === "admin") {
-      // If the user requested admin role, validate it
-      userRole = "admin";
-    }
+    // Determine user role
+    const userRole = !role && !adminExists ? "admin" : role || "staff";
+    console.log("Assigning role:", userRole);
 
-    // Create new user - let the model middleware handle password hashing
+    // Create new user data
     const userData = {
       name,
       email,
-      password, // Don't hash manually, let the pre('save') middleware handle it
+      password, // Let model middleware handle hashing
       role: userRole,
     };
 
     // Track who created this user (for all user types, including admins)
     // Only skip createdBy for the very first admin user
-    if (!isFirstUser) {
-      // Authenticate the requesting user to get createdBy
-      const auth = await authenticateUser(req);
-      if (auth.authenticated && auth.user.role === "admin") {
-        userData.createdBy = auth.user._id;
-        console.log("Setting createdBy to:", auth.user._id);
-      } else if (!auth.authenticated) {
-        return res
-          .status(401)
-          .json({ message: "Authentication required to create users" });
-      } else {
-        return res
-          .status(403)
-          .json({ message: "Only admins can create users" });
-      }
-    } else {
+    if (auth.user.role === "admin") {
+      userData.createdBy = auth.user._id;
+      console.log("Setting createdBy to:", auth.user._id);
+    } else if (userRole === "admin" && !adminExists) {
       // This is the first admin user - no creator to track
       console.log("First admin user - no createdBy field");
     }
 
-    // Create user
     const user = await User.create(userData);
 
     if (user) {
@@ -168,7 +148,7 @@ const registrationHandler = async (req, res) => {
       res.status(400).json({ message: "Invalid user data" });
     }
   } catch (error) {
-    console.error("Registration error:", error);
+    console.error("Create user error:", error);
     res.status(500).json({
       message: error.message,
       stack: process.env.NODE_ENV === "production" ? "🥞" : error.stack,
@@ -177,4 +157,4 @@ const registrationHandler = async (req, res) => {
 };
 
 // Export the handler wrapped with CORS middleware
-module.exports = allowCors(registrationHandler);
+module.exports = allowCors(createUserHandler);
