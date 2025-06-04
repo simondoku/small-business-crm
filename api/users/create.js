@@ -58,6 +58,7 @@ const authenticateUser = async (req) => {
 
     return { authenticated: true, user };
   } catch (error) {
+    console.error("JWT verification error:", error);
     return { authenticated: false, error: "Invalid token" };
   }
 };
@@ -69,7 +70,13 @@ const createUserHandler = async (req, res) => {
   }
 
   try {
-    console.log("Create user request received");
+    console.log(
+      "Create user request received:",
+      JSON.stringify({
+        ...req.body,
+        password: req.body.password ? "[REDACTED]" : undefined,
+      })
+    );
 
     // Connect to database
     const db = await connectMongo();
@@ -83,12 +90,20 @@ const createUserHandler = async (req, res) => {
     // Authenticate the requesting user
     const auth = await authenticateUser(req);
     if (!auth.authenticated) {
+      console.log("Authentication failed:", auth.error);
       return res.status(401).json({ message: auth.error || "Invalid token" });
     }
 
+    console.log(
+      "Authenticated user:",
+      auth.user.email,
+      "Role:",
+      auth.user.role
+    );
+
     // Only admins can create users
     if (auth.user.role !== "admin") {
-      return res.status(403).json({ message: "Not authorized" });
+      return res.status(403).json({ message: "Not authorized as admin" });
     }
 
     const { name, email, password, role } = req.body;
@@ -106,41 +121,36 @@ const createUserHandler = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Check for existing admin users
-    const adminExists = await User.findOne({ role: "admin" }).maxTimeMS(5000);
-    console.log("Admin exists check:", adminExists ? "Yes" : "No");
-
     // Determine user role
-    const userRole = !role && !adminExists ? "admin" : role || "staff";
-    console.log("Assigning role:", userRole);
+    const userRole = role || "staff";
+    console.log("Creating user with role:", userRole);
 
-    // Create new user data
+    // Create new user data with createdBy field
     const userData = {
       name,
       email,
       password, // Let model middleware handle hashing
       role: userRole,
+      createdBy: auth.user._id, // Always set createdBy for admin-created users
     };
 
-    // Track who created this user (for all user types, including admins)
-    // Only skip createdBy for the very first admin user
-    if (auth.user.role === "admin") {
-      userData.createdBy = auth.user._id;
-      console.log("Setting createdBy to:", auth.user._id);
-    } else if (userRole === "admin" && !adminExists) {
-      // This is the first admin user - no creator to track
-      console.log("First admin user - no createdBy field");
-    }
+    console.log("Creating user with createdBy:", auth.user._id);
 
     const user = await User.create(userData);
 
     if (user) {
-      console.log("User created successfully:", user._id);
+      console.log(
+        "User created successfully:",
+        user._id,
+        "createdBy:",
+        user.createdBy
+      );
       res.status(201).json({
         _id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
+        createdBy: user.createdBy,
         token: generateToken(user._id),
         success: true,
       });
