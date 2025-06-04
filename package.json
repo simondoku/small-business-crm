@@ -33,7 +33,6 @@
     "react-router-dom": "^7.5.2",
     "react-scripts": "5.0.1",
     "stripe": "^18.1.0",
-    "vercel-build": "npm run build",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

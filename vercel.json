@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "small-business-crm",
   "builds": [
     {
       "src": "package.json",
@@ -22,10 +21,5 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "api/**/*.js": {
-      "runtime": "nodejs18.x"
-    }
   }
 }
