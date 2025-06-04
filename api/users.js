@@ -74,13 +74,60 @@ const mockUser = {
   role: "admin",
 };
 
+// Get users handler function (admin only with hierarchical permissions)
+const getUsersHandler = async (req, res) => {
+  try {
+    console.log("Get users request received");
+
+    // Connect to database
+    const db = await connectMongo();
+    if (!db.connected) {
+      return res.status(500).json({
+        message: "Database connection failed",
+        error: db.error,
+      });
+    }
+
+    // Authenticate the requesting user
+    const auth = await authenticateUser(req);
+    if (!auth.authenticated) {
+      return res.status(401).json({ message: auth.error || "Invalid token" });
+    }
+
+    // Only admins can view users
+    if (auth.user.role !== "admin") {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    // Simple hierarchical query: admin can only see users they created + themselves
+    const query = {
+      $or: [
+        { createdBy: auth.user._id }, // Users created by this admin
+        { _id: auth.user._id }, // The admin themselves
+      ],
+    };
+
+    const users = await User.find(query)
+      .select("-password -loginHistory")
+      .populate("createdBy", "name email")
+      .sort({ createdAt: -1 })
+      .maxTimeMS(10000);
+
+    console.log(
+      `Admin ${auth.user._id} (${auth.user.name}) can see ${users.length} users`
+    );
+    res.json(users);
+  } catch (error) {
+    console.error("Error in getUsersHandler:", error);
+    res.status(500).json({
+      message: error.message,
+      stack: process.env.NODE_ENV === "production" ? "🥞" : error.stack,
+    });
+  }
+};
+
 // Registration handler function
 const registrationHandler = async (req, res) => {
-  // Only process POST requests for registration
-  if (req.method !== "POST" && req.method !== "OPTIONS") {
-    return res.status(405).json({ message: "Method Not Allowed" });
-  }
-
   try {
     console.log("Registration request received:", JSON.stringify(req.body));
 
@@ -176,5 +223,21 @@ const registrationHandler = async (req, res) => {
   }
 };
 
+// Main handler that routes based on HTTP method
+const handler = async (req, res) => {
+  if (req.method === "GET") {
+    // Handle GET requests - list users
+    return getUsersHandler(req, res);
+  } else if (req.method === "POST") {
+    // Handle POST requests - register/create users
+    return registrationHandler(req, res);
+  } else if (req.method === "OPTIONS") {
+    // Handle preflight requests
+    return res.status(200).end();
+  } else {
+    return res.status(405).json({ message: "Method Not Allowed" });
+  }
+};
+
 // Export the handler wrapped with CORS middleware
-module.exports = allowCors(registrationHandler);
+module.exports = allowCors(handler);
