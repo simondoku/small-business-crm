@@ -2,7 +2,6 @@
   "name": "small-business-crm",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://businesscrmfrontend-2bzhv01ql-simons-projects-94c78eac.vercel.app",
   "dependencies": {
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^1.0.6",
@@ -38,9 +37,9 @@
   },
   "scripts": {
     "start": "react-app-rewired start",
-    "build": "PUBLIC_URL=https://businesscrmfrontend-2bzhv01ql-simons-projects-94c78eac.vercel.app CI=false GENERATE_SOURCEMAP=false react-app-rewired build",
+    "build": "PUBLIC_URL=. CI=false GENERATE_SOURCEMAP=false react-app-rewired build",
     "build:analyze": "ANALYZE=true GENERATE_SOURCEMAP=false react-app-rewired build",
-    "vercel-build": "PUBLIC_URL=https://businesscrmfrontend-2bzhv01ql-simons-projects-94c78eac.vercel.app CI=false HUSKY=0 GENERATE_SOURCEMAP=false react-app-rewired build",
+    "vercel-build": "PUBLIC_URL=. CI=false HUSKY=0 GENERATE_SOURCEMAP=false react-app-rewired build",
     "test": "react-app-rewired test",
     "eject": "react-scripts eject",
     "start:prod": "npm run build && serve -s build",

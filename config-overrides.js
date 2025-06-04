@@ -16,25 +16,17 @@ module.exports = override(
   // Add Babel plugins for optimization
   addBabelPlugin("@babel/plugin-transform-runtime"),
 
-  // Force set the public URL and API URL for production builds
+  // Set API URL for production builds (backend URL stays the same)
   (config) => {
-    // Set the correct public URL for production builds
-    if (process.env.NODE_ENV === "production") {
-      config.output.publicPath =
-        "https://businesscrmfrontend-2bzhv01ql-simons-projects-94c78eac.vercel.app/";
-    }
-
-    // Define REACT_APP_API_URL for production builds
+    // Don't set publicPath - let it use relative paths
+    // Only define the API URL for backend communication
     config.plugins = [
       ...config.plugins,
       new webpack.DefinePlugin({
         "process.env.REACT_APP_API_URL": JSON.stringify(
-          "https://businesscrm-9r86varni-simons-projects-94c78eac.vercel.app/api"
-        ),
-        "process.env.PUBLIC_URL": JSON.stringify(
           process.env.NODE_ENV === "production"
-            ? "https://businesscrmfrontend-2bzhv01ql-simons-projects-94c78eac.vercel.app"
-            : ""
+            ? "https://businesscrm-9r86varni-simons-projects-94c78eac.vercel.app/api"
+            : "http://localhost:5003/api"
         ),
       }),
     ];
