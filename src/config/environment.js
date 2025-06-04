@@ -23,6 +23,7 @@ if (isDevelopment) {
   console.log("Environment Configuration:", {
     mode: process.env.NODE_ENV,
     apiBaseUrl: API_CONFIG.baseUrl,
+    publicUrl: process.env.PUBLIC_URL,
   });
 }
 
@@ -38,8 +39,10 @@ export const ENV_SETTINGS = {
   logLevel: process.env.REACT_APP_LOG_LEVEL || "info",
 };
 
-export default {
+const config = {
   API_CONFIG,
   FEATURES,
   ENV_SETTINGS,
 };
+
+export default config;
