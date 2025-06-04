@@ -7,10 +7,12 @@ const {
   updateCustomer,
   deleteCustomer,
 } = require('../controllers/customerController');
+const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.route('/').get(getCustomers).post(createCustomer);
-router.route('/:id').get(getCustomerById).put(updateCustomer).delete(deleteCustomer);
+// Protect all routes - user must be authenticated
+router.route('/').get(protect, getCustomers).post(protect, createCustomer);
+router.route('/:id').get(protect, getCustomerById).put(protect, updateCustomer).delete(protect, deleteCustomer);
 
 module.exports = router;

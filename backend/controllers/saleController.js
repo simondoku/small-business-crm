@@ -3,11 +3,16 @@ const Customer = require('../models/Customer');
 const Product = require('../models/Product');
 const Sale = require('../models/Sale');
 const User = require('../models/User');
+const { getBusinessOwner, canAccessData } = require('../utils/businessUtils');
 
-// Get all sales
+// Get all sales (filtered by business)
 const getSales = async (req, res) => {
   try {
-    const sales = await Sale.find({})
+    // Get the business owner for the current user
+    const businessOwner = await getBusinessOwner(req.user._id);
+    
+    // Only get sales created by users in the same business
+    const sales = await Sale.find({ createdBy: businessOwner })
       .populate('customer', 'name phone')
       .populate('items.product', 'name');
     res.json(sales);
@@ -17,28 +22,37 @@ const getSales = async (req, res) => {
   }
 };
 
-// Get sale by ID
+// Get sale by ID (with business access check)
 const getSaleById = async (req, res) => {
   try {
     const sale = await Sale.findById(req.params.id)
       .populate('customer', 'name phone address')
       .populate('items.product', 'name category');
     
-    if (sale) {
-      res.json(sale);
-    } else {
-      res.status(404).json({ message: 'Sale not found' });
+    if (!sale) {
+      return res.status(404).json({ message: 'Sale not found' });
     }
+    
+    // Check if user can access this sale
+    const canAccess = await canAccessData(req.user._id, sale.createdBy);
+    if (!canAccess) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    
+    res.json(sale);
   } catch (error) {
     console.error('Error fetching sale by ID:', error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// Create a sale with inventory management
+// Create a sale with inventory management (with business isolation)
 const createSale = async (req, res) => {
   try {
     const { customerId, items, comments } = req.body;
+    
+    // Get the business owner for the current user
+    const businessOwner = await getBusinessOwner(req.user._id);
     
     // Basic validation
     if (!customerId) {
@@ -49,10 +63,15 @@ const createSale = async (req, res) => {
       return res.status(400).json({ message: 'Items array is required and cannot be empty' });
     }
     
-    // Find customer
+    // Find customer and verify business access
     const customer = await Customer.findById(customerId);
     if (!customer) {
       return res.status(404).json({ message: `Customer with ID ${customerId} not found` });
+    }
+    
+    const canAccessCustomer = await canAccessData(req.user._id, customer.createdBy);
+    if (!canAccessCustomer) {
+      return res.status(403).json({ message: 'Access denied to this customer' });
     }
     
     // Calculate total and prepare items
@@ -63,10 +82,15 @@ const createSale = async (req, res) => {
     
     // Process each item
     for (const item of items) {
-      // Find product
+      // Find product and verify business access
       const product = await Product.findById(item.productId);
       if (!product) {
         return res.status(404).json({ message: `Product with ID ${item.productId} not found` });
+      }
+      
+      const canAccessProduct = await canAccessData(req.user._id, product.createdBy);
+      if (!canAccessProduct) {
+        return res.status(403).json({ message: `Access denied to product ${product.name}` });
       }
       
       // Check stock levels
@@ -113,12 +137,13 @@ const createSale = async (req, res) => {
       }
     }
     
-    // Create the sale document
+    // Create the sale document with business ownership
     const newSale = new Sale({
       customer: customer._id,
       items: saleItems,
       totalAmount,
-      comments
+      comments,
+      createdBy: businessOwner // Assign to business owner
     });
     
     // Save to database
@@ -142,15 +167,19 @@ const createSale = async (req, res) => {
   }
 };
 
-// Get monthly sales data (add this before the module.exports)
+// Get monthly sales data (filtered by business)
 const getMonthlySales = async (req, res) => {
   try {
     const year = req.query.year || new Date().getFullYear();
     
-    // Aggregate monthly sales
+    // Get the business owner for the current user
+    const businessOwner = await getBusinessOwner(req.user._id);
+    
+    // Aggregate monthly sales for this business only
     const monthlySales = await Sale.aggregate([
       {
         $match: {
+          createdBy: businessOwner,
           createdAt: {
             $gte: new Date(`${year}-01-01`),
             $lte: new Date(`${year}-12-31`)

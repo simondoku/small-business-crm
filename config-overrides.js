@@ -16,7 +16,7 @@ module.exports = override(
     config.plugins = [
       ...config.plugins,
       new webpack.DefinePlugin({
-        'process.env.REACT_APP_API_URL': JSON.stringify('https://businesscrm-beta.vercel.app/api')
+        'process.env.REACT_APP_API_URL': JSON.stringify('https://businesscrm-jcfiuo6d8-simons-projects-94c78eac.vercel.app/api')
       })
     ];
     return config;

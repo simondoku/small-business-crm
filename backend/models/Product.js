@@ -34,6 +34,12 @@ const productSchema = mongoose.Schema(
       type: String,
       required: false,
     },
+    // Business isolation: track which business owns this product
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
   },
   {
     timestamps: true,

@@ -38,7 +38,13 @@ const saleSchema = mongoose.Schema(
     comments: {
       type: String,
       required: false,
-    }
+    },
+    // Business isolation: track which business owns this sale
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
   },
   {
     timestamps: true,

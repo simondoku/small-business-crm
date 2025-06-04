@@ -2,21 +2,25 @@
 const Sale = require('../models/Sale');
 const Product = require('../models/Product');
 const mongoose = require('mongoose');
+const { getBusinessOwner } = require('../utils/businessUtils');
 
-// Get sales by category
+// Get sales by category (filtered by business)
 const getSalesByCategory = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     
-    // Parse dates and create query
-    const query = {};
+    // Get the business owner for the current user
+    const businessOwner = await getBusinessOwner(req.user._id);
+    
+    // Parse dates and create query with business filter
+    const query = { createdBy: businessOwner };
     if (startDate || endDate) {
       query.createdAt = {};
       if (startDate) query.createdAt.$gte = new Date(startDate);
       if (endDate) query.createdAt.$lte = new Date(endDate);
     }
     
-    // Aggregate sales by product category
+    // Aggregate sales by product category for this business only
     const salesByCategory = await Sale.aggregate([
       { $match: query },
       { $unwind: '$items' },
@@ -29,6 +33,12 @@ const getSalesByCategory = async (req, res) => {
         }
       },
       { $unwind: '$productInfo' },
+      // Filter products to ensure they belong to the same business
+      {
+        $match: {
+          'productInfo.createdBy': businessOwner
+        }
+      },
       {
         $group: {
           _id: '$productInfo.category',
@@ -52,20 +62,24 @@ const getSalesByCategory = async (req, res) => {
   }
 };
 
-// Get monthly sales data
+// Get monthly sales data (filtered by business)
 const getMonthlySales = async (req, res) => {
   try {
     const { year } = req.query;
     const selectedYear = parseInt(year) || new Date().getFullYear();
     
+    // Get the business owner for the current user
+    const businessOwner = await getBusinessOwner(req.user._id);
+    
     // Create date range for the year
     const startDate = new Date(selectedYear, 0, 1);
     const endDate = new Date(selectedYear, 11, 31, 23, 59, 59, 999);
     
-    // Aggregate sales by month
+    // Aggregate sales by month for this business only
     const monthlySales = await Sale.aggregate([
       { 
         $match: { 
+          createdBy: businessOwner,
           createdAt: { $gte: startDate, $lte: endDate } 
         } 
       },

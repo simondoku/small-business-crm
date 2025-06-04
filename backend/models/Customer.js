@@ -28,6 +28,12 @@ const customerSchema = mongoose.Schema(
       type: Date,
       required: false,
     },
+    // Business isolation: track which business owns this customer
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
   },
   {
     timestamps: true,
