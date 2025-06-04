@@ -21,7 +21,7 @@ module.exports = override(
     // Set the correct public URL for production builds
     if (process.env.NODE_ENV === "production") {
       config.output.publicPath =
-        "https://businesscrmfrontend-jgsjd723a-simons-projects-94c78eac.vercel.app/";
+        "https://businesscrmfrontend-2bzhv01ql-simons-projects-94c78eac.vercel.app/";
     }
 
     // Define REACT_APP_API_URL for production builds
@@ -33,7 +33,7 @@ module.exports = override(
         ),
         "process.env.PUBLIC_URL": JSON.stringify(
           process.env.NODE_ENV === "production"
-            ? "https://businesscrmfrontend-jgsjd723a-simons-projects-94c78eac.vercel.app"
+            ? "https://businesscrmfrontend-2bzhv01ql-simons-projects-94c78eac.vercel.app"
             : ""
         ),
       }),
