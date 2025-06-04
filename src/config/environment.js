@@ -13,7 +13,7 @@ export const API_CONFIG = {
   baseUrl: isDevelopment
     ? "http://localhost:5003/api" // Updated to use backend server port
     : process.env.REACT_APP_API_URL ||
-      "https://businesscrmfrontend-fwydrolbp-simons-projects-94c78eac.vercel.app/api",
+      "https://businesscrmfrontend-gikqvtt44-simons-projects-94c78eac.vercel.app/api", // Updated to current deployment URL
   timeout: 30000,
   retryAttempts: 2,
 };
