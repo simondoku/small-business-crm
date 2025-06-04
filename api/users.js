@@ -225,6 +225,8 @@ const registrationHandler = async (req, res) => {
 
 // Main handler that routes based on HTTP method
 const handler = async (req, res) => {
+  console.log(`Handling ${req.method} request to /api/users`); // Added logging for debugging
+  
   if (req.method === "GET") {
     // Handle GET requests - list users
     return getUsersHandler(req, res);
@@ -235,6 +237,7 @@ const handler = async (req, res) => {
     // Handle preflight requests
     return res.status(200).end();
   } else {
+    console.log(`Method ${req.method} not allowed for /api/users`); // Added logging
     return res.status(405).json({ message: "Method Not Allowed" });
   }
 };
