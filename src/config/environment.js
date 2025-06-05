@@ -2,6 +2,7 @@
 /**
  * Central location for environment variables and configuration
  * This helps ensure consistency across the application
+ * Updated: June 2025 - Fixed git configuration for proper GitHub contributions tracking
  */
 
 // Force local development by default in development mode
