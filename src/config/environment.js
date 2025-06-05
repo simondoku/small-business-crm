@@ -12,8 +12,7 @@ export const API_CONFIG = {
   // Use backend server running on port 5003
   baseUrl: isDevelopment
     ? "http://localhost:5003/api" // Updated to use backend server port
-    : process.env.REACT_APP_API_URL ||
-      "https://businesscrmfrontend-gikqvtt44-simons-projects-94c78eac.vercel.app/api", // Updated to current deployment URL
+    : process.env.REACT_APP_API_URL || "https://bcrm.dev/api", // Use stable custom domain instead of changing deployment URLs
   timeout: 30000,
   retryAttempts: 2,
 };

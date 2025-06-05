@@ -226,7 +226,7 @@ const registrationHandler = async (req, res) => {
 // Main handler that routes based on HTTP method
 const handler = async (req, res) => {
   console.log(`Handling ${req.method} request to /api/users`); // Added logging for debugging
-  
+
   if (req.method === "GET") {
     // Handle GET requests - list users
     return getUsersHandler(req, res);

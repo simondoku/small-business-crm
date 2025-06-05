@@ -1,54 +1,55 @@
 // src/services/userService.js
-import api from './api';
+import api from "./api";
 
 // Get all users (admin only)
 export const getUsers = async () => {
-  const response = await api.get('/users');
+  const response = await api.get("/users");
   return response.data;
 };
 
-// Register a new user
+// Register a new user (for setup/initial registration)
 export const register = async (userData) => {
-  const response = await api.post('/users', userData);
+  const response = await api.post("/users", userData); // Keep using serverless for setup
   return response.data;
 };
 
 // Login user
 export const login = async (email, password) => {
-  const response = await api.post('/users/login', { email, password });
+  const response = await api.post("/users/login", { email, password });
   return response.data;
 };
 
-// Create a new user (admin only)
+// Create a new user (admin only) - Fixed to use backend endpoint
 export const createUser = async (userData) => {
-  const response = await api.post('/users', userData);
+  // Use the backend API endpoint which has authentication middleware
+  const response = await api.post("/users/create", userData);
   return response.data;
 };
 
 // Get user profile
 export const getUserProfile = async () => {
-  const response = await api.get('/users/profile');
+  const response = await api.get("/users/profile");
   return response.data;
 };
 
 // Check system setup status
 export const checkSystemSetup = async () => {
-  const response = await api.get('/users/check-setup');
+  const response = await api.get("/users/check-setup");
   return response.data;
 };
 
 // Update user password
 export const updatePassword = async (currentPassword, newPassword) => {
-  const response = await api.put('/users/update-password', {
+  const response = await api.put("/users/update-password", {
     currentPassword,
-    newPassword
+    newPassword,
   });
   return response.data;
 };
 
 // Record user logout
 export const logoutUser = async () => {
-  const response = await api.post('/users/logout');
+  const response = await api.post("/users/logout");
   return response.data;
 };
 
