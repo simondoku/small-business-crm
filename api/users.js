@@ -223,21 +223,223 @@ const registrationHandler = async (req, res) => {
   }
 };
 
-// Main handler that routes based on HTTP method
-const handler = async (req, res) => {
-  console.log(`Handling ${req.method} request to /api/users`); // Added logging for debugging
+// Check setup handler function
+const checkSetupHandler = async (req, res) => {
+  try {
+    console.log("Check setup request received");
 
-  if (req.method === "GET") {
-    // Handle GET requests - list users
-    return getUsersHandler(req, res);
-  } else if (req.method === "POST") {
-    // Handle POST requests - register/create users
-    return registrationHandler(req, res);
-  } else if (req.method === "OPTIONS") {
-    // Handle preflight requests
+    // Add timeout to the entire operation
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("Setup check timeout")), 8000);
+    });
+
+    const checkPromise = async () => {
+      const db = await connectMongo();
+
+      if (!db.connected) {
+        console.log("Database connection failed, assuming system needs setup");
+        return {
+          initialized: false,
+          hasAdmin: false,
+          note: "Database connection failed - assuming setup needed",
+        };
+      }
+
+      // Try to count admin users with timeout
+      try {
+        const adminCount = await User.countDocuments({ role: "admin" })
+          .maxTimeMS(5000) // 5 second max for the query
+          .lean() // Use lean for faster queries
+          .exec();
+
+        const hasAdmin = adminCount > 0;
+        console.log("Admin count:", adminCount);
+
+        return {
+          initialized: hasAdmin,
+          hasAdmin: hasAdmin,
+        };
+      } catch (queryError) {
+        console.log("Query failed or timed out:", queryError.message);
+        // If query fails, assume system needs setup to be safe
+        return {
+          initialized: false,
+          hasAdmin: false,
+          note: "Query failed - assuming setup needed",
+        };
+      }
+    };
+
+    // Race between the check and timeout
+    const result = await Promise.race([checkPromise(), timeoutPromise]);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error in check-setup endpoint:", error.message);
+
+    // For any error, assume system needs setup to avoid blocking users
+    res.status(200).json({
+      initialized: false,
+      hasAdmin: false,
+      note: "Error occurred - assuming setup needed",
+    });
+  }
+};
+
+// Login handler function
+const loginHandler = async (req, res) => {
+  try {
+    console.log("Login request received");
+
+    const { email, password } = req.body;
+
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({ message: "Please provide email and password" });
+    }
+
+    // Connect to database
+    const db = await connectMongo();
+    if (!db.connected) {
+      return res.status(500).json({
+        message: "Database connection failed",
+        error: db.error,
+      });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email }).maxTimeMS(5000);
+
+    if (user && (await bcrypt.compare(password, user.password))) {
+      console.log("Login successful for:", user.email);
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token: generateToken(user._id),
+        success: true,
+      });
+    } else {
+      res.status(401).json({ message: "Invalid email or password" });
+    }
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({
+      message: error.message,
+      stack: process.env.NODE_ENV === "production" ? "🥞" : error.stack,
+    });
+  }
+};
+
+// Create user handler function (admin only)
+const createUserHandler = async (req, res) => {
+  try {
+    console.log("Create user request received:", JSON.stringify({
+      ...req.body,
+      password: req.body.password ? "[REDACTED]" : undefined,
+    }));
+
+    // Connect to database
+    const db = await connectMongo();
+    if (!db.connected) {
+      return res.status(500).json({
+        message: "Database connection failed",
+        error: db.error,
+      });
+    }
+
+    // Authenticate the requesting user
+    const auth = await authenticateUser(req);
+    if (!auth.authenticated) {
+      console.log("Authentication failed:", auth.error);
+      return res.status(401).json({ message: auth.error || "Invalid token" });
+    }
+
+    console.log("Authenticated user:", auth.user.email, "Role:", auth.user.role);
+
+    // Only admins can create users
+    if (auth.user.role !== "admin") {
+      return res.status(403).json({ message: "Not authorized as admin" });
+    }
+
+    const { name, email, password, role } = req.body;
+
+    // Validation
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "Please provide name, email, and password" });
+    }
+
+    // Check if user already exists
+    const userExists = await User.findOne({ email }).maxTimeMS(5000);
+    if (userExists) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    // Determine user role
+    const userRole = role || "staff";
+    console.log("Creating user with role:", userRole);
+
+    // Create new user data with createdBy field
+    const userData = {
+      name,
+      email,
+      password, // Let model middleware handle hashing
+      role: userRole,
+      createdBy: auth.user._id, // Always set createdBy for admin-created users
+    };
+
+    console.log("Creating user with createdBy:", auth.user._id);
+
+    const user = await User.create(userData);
+
+    if (user) {
+      console.log("User created successfully:", user._id, "createdBy:", user.createdBy);
+      res.status(201).json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        createdBy: user.createdBy,
+        token: generateToken(user._id),
+        success: true,
+      });
+    } else {
+      res.status(400).json({ message: "Invalid user data" });
+    }
+  } catch (error) {
+    console.error("Create user error:", error);
+    res.status(500).json({
+      message: error.message,
+      stack: process.env.NODE_ENV === "production" ? "🥞" : error.stack,
+    });
+  }
+};
+
+// Main handler that routes based on HTTP method and URL path
+const handler = async (req, res) => {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const pathname = url.pathname;
+  
+  console.log(`Handling ${req.method} request to ${pathname}`);
+
+  // Handle OPTIONS for all endpoints
+  if (req.method === "OPTIONS") {
     return res.status(200).end();
+  }
+
+  // Route based on pathname and method
+  if (pathname === "/api/users/check-setup" && req.method === "GET") {
+    return checkSetupHandler(req, res);
+  } else if (pathname === "/api/users/login" && req.method === "POST") {
+    return loginHandler(req, res);
+  } else if (pathname === "/api/users/create" && req.method === "POST") {
+    return createUserHandler(req, res);
+  } else if (pathname === "/api/users" && req.method === "GET") {
+    return getUsersHandler(req, res);
+  } else if (pathname === "/api/users" && req.method === "POST") {
+    return registrationHandler(req, res);
   } else {
-    console.log(`Method ${req.method} not allowed for /api/users`); // Added logging
+    console.log(`Method ${req.method} not allowed for ${pathname}`);
     return res.status(405).json({ message: "Method Not Allowed" });
   }
 };
