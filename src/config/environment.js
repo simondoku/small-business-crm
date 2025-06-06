@@ -13,7 +13,7 @@ export const API_CONFIG = {
   // Use backend server running on port 5003
   baseUrl: isDevelopment
     ? "http://localhost:5003/api" // Updated to use backend server port
-    : process.env.REACT_APP_API_URL || "https://bcrm.dev/api", // Use stable custom domain instead of changing deployment URLs
+    : process.env.REACT_APP_API_URL || "https://www.bcrm.dev/api", // Fixed: Use www.bcrm.dev to avoid redirect issues
   timeout: 30000,
   retryAttempts: 2,
 };
