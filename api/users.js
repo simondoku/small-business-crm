@@ -159,55 +159,79 @@ const registrationHandler = async (req, res) => {
     const adminExists = await User.findOne({ role: "admin" }).maxTimeMS(5000);
     const isFirstUser = !adminExists;
 
-    // Determine role - first user is always admin, otherwise use provided role or default to staff
-    let userRole = "staff";
+    // For the first user (initial admin), no authentication needed
     if (isFirstUser) {
-      userRole = "admin";
-    } else if (role === "admin") {
-      // If the user requested admin role, validate it
-      userRole = "admin";
+      console.log("Creating first admin user - no authentication required");
+
+      const userData = {
+        name,
+        email,
+        password, // Don't hash manually, let the pre('save') middleware handle it
+        role: "admin", // First user is always admin
+        // No createdBy field for the first admin
+      };
+
+      const user = await User.create(userData);
+
+      if (user) {
+        console.log("First admin user created successfully:", user._id);
+        res.status(201).json({
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          token: generateToken(user._id),
+          success: true,
+        });
+      } else {
+        res.status(400).json({ message: "Invalid user data" });
+      }
+      return;
     }
 
-    // Create new user - let the model middleware handle password hashing
+    // For all subsequent users, authentication is required
+    const auth = await authenticateUser(req);
+    if (!auth.authenticated) {
+      return res
+        .status(401)
+        .json({ message: "Authentication required to create users" });
+    }
+
+    // Only admins can create users
+    if (auth.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admins can create users" });
+    }
+
+    // Determine role - use provided role or default to staff
+    const userRole = role || "staff";
+
+    // Create user data with proper createdBy field
     const userData = {
       name,
       email,
-      password, // Don't hash manually, let the pre('save') middleware handle it
+      password, // Let model middleware handle hashing
       role: userRole,
+      createdBy: auth.user._id, // Always set createdBy for admin-created users
     };
 
-    // Track who created this user (for all user types, including admins)
-    // Only skip createdBy for the very first admin user
-    if (!isFirstUser) {
-      // Authenticate the requesting user to get createdBy
-      const auth = await authenticateUser(req);
-      if (auth.authenticated && auth.user.role === "admin") {
-        userData.createdBy = auth.user._id;
-        console.log("Setting createdBy to:", auth.user._id);
-      } else if (!auth.authenticated) {
-        return res
-          .status(401)
-          .json({ message: "Authentication required to create users" });
-      } else {
-        return res
-          .status(403)
-          .json({ message: "Only admins can create users" });
-      }
-    } else {
-      // This is the first admin user - no creator to track
-      console.log("First admin user - no createdBy field");
-    }
+    console.log("Creating user with createdBy:", auth.user._id);
 
     // Create user
     const user = await User.create(userData);
 
     if (user) {
-      console.log("User created successfully:", user._id);
+      console.log(
+        "User created successfully:",
+        user._id,
+        "createdBy:",
+        user.createdBy
+      );
       res.status(201).json({
         _id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
+        createdBy: user.createdBy,
         token: generateToken(user._id),
         success: true,
       });
