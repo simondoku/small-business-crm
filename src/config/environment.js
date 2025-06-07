@@ -12,8 +12,8 @@ const isDevelopment = process.env.NODE_ENV === "development";
 export const API_CONFIG = {
   // Use backend server running on port 5003
   baseUrl: isDevelopment
-    ? "http://localhost:5003/api" // Updated to use backend server port
-    : process.env.REACT_APP_API_URL || "https://www.bcrm.dev/api", // Fixed: Use www.bcrm.dev to avoid redirect issues
+    ? "http://localhost:5003/api" // Local development backend
+    : "https://businesscrm-9r86varni-simons-projects-94c78eac.vercel.app/api", // Your working Vercel Express backend
   timeout: 30000,
   retryAttempts: 2,
 };

@@ -294,7 +294,9 @@ const loginHandler = async (req, res) => {
 
     // Validation
     if (!email || !password) {
-      return res.status(400).json({ message: "Please provide email and password" });
+      return res
+        .status(400)
+        .json({ message: "Please provide email and password" });
     }
 
     // Connect to database
@@ -334,10 +336,13 @@ const loginHandler = async (req, res) => {
 // Create user handler function (admin only)
 const createUserHandler = async (req, res) => {
   try {
-    console.log("Create user request received:", JSON.stringify({
-      ...req.body,
-      password: req.body.password ? "[REDACTED]" : undefined,
-    }));
+    console.log(
+      "Create user request received:",
+      JSON.stringify({
+        ...req.body,
+        password: req.body.password ? "[REDACTED]" : undefined,
+      })
+    );
 
     // Connect to database
     const db = await connectMongo();
@@ -355,7 +360,12 @@ const createUserHandler = async (req, res) => {
       return res.status(401).json({ message: auth.error || "Invalid token" });
     }
 
-    console.log("Authenticated user:", auth.user.email, "Role:", auth.user.role);
+    console.log(
+      "Authenticated user:",
+      auth.user.email,
+      "Role:",
+      auth.user.role
+    );
 
     // Only admins can create users
     if (auth.user.role !== "admin") {
@@ -366,7 +376,9 @@ const createUserHandler = async (req, res) => {
 
     // Validation
     if (!name || !email || !password) {
-      return res.status(400).json({ message: "Please provide name, email, and password" });
+      return res
+        .status(400)
+        .json({ message: "Please provide name, email, and password" });
     }
 
     // Check if user already exists
@@ -393,7 +405,12 @@ const createUserHandler = async (req, res) => {
     const user = await User.create(userData);
 
     if (user) {
-      console.log("User created successfully:", user._id, "createdBy:", user.createdBy);
+      console.log(
+        "User created successfully:",
+        user._id,
+        "createdBy:",
+        user.createdBy
+      );
       res.status(201).json({
         _id: user._id,
         name: user.name,
@@ -419,7 +436,7 @@ const createUserHandler = async (req, res) => {
 const handler = async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pathname = url.pathname;
-  
+
   console.log(`Handling ${req.method} request to ${pathname}`);
 
   // Handle OPTIONS for all endpoints
