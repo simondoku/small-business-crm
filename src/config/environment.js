@@ -13,7 +13,7 @@ export const API_CONFIG = {
   // Use backend server running on port 5003
   baseUrl: isDevelopment
     ? "http://localhost:5003/api" // Local development backend
-    : "https://businesscrm-9r86varni-simons-projects-94c78eac.vercel.app/api", // Your working Vercel Express backend
+    : "https://businesscrmfrontend-simons-projects-94c78eac.vercel.app/api", // Use the same domain as frontend
   timeout: 30000,
   retryAttempts: 2,
 };
