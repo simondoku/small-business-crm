@@ -168,10 +168,18 @@ const registrationHandler = async (req, res) => {
         email,
         password, // Don't hash manually, let the pre('save') middleware handle it
         role: "admin", // First user is always admin
-        // No createdBy field for the first admin
+        // For the first admin, they are their own business owner
+        businessOwner: null, // Will be set after creation
       };
 
       const user = await User.create(userData);
+
+      // Set the first admin as their own business owner
+      if (user) {
+        await User.findByIdAndUpdate(user._id, {
+          businessOwner: user._id,
+        });
+      }
 
       if (user) {
         console.log("First admin user created successfully:", user._id);
@@ -212,6 +220,7 @@ const registrationHandler = async (req, res) => {
       password, // Let model middleware handle hashing
       role: userRole,
       createdBy: auth.user._id, // Always set createdBy for admin-created users
+      businessOwner: auth.user.businessOwner || auth.user._id, // Set businessOwner for proper isolation
     };
 
     console.log("Creating user with createdBy:", auth.user._id);
@@ -422,6 +431,7 @@ const createUserHandler = async (req, res) => {
       password, // Let model middleware handle hashing
       role: userRole,
       createdBy: auth.user._id, // Always set createdBy for admin-created users
+      businessOwner: auth.user.businessOwner || auth.user._id, // Set businessOwner for proper isolation
     };
 
     console.log("Creating user with createdBy:", auth.user._id);

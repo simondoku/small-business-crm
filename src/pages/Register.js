@@ -1,5 +1,5 @@
 // src/pages/Register.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import MainLayout from '../components/layout/MainLayout';
@@ -17,7 +17,30 @@ const Register = () => {
     const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
-    const { register, user } = useAuth();
+    const { register, user, checkPermission } = useAuth();
+
+    // Check if user is admin - redirect if not
+    useEffect(() => {
+        if (!user || !checkPermission('admin')) {
+            navigate('/dashboard');
+            return;
+        }
+    }, [user, checkPermission, navigate]);
+
+    // Don't render if not admin
+    if (!user || !checkPermission('admin')) {
+        return (
+            <MainLayout title="Access Denied">
+                <div className="max-w-md mx-auto bg-dark-400 rounded-lg shadow p-6">
+                    <h2 className="text-xl font-semibold mb-4 text-red-400">Access Denied</h2>
+                    <p className="text-gray-300">Only administrators can create new users.</p>
+                    <Link to="/dashboard" className="mt-4 inline-block text-primary hover:underline">
+                        Return to Dashboard
+                    </Link>
+                </div>
+            </MainLayout>
+        );
+    }
 
     const handleChange = (e) => {
         const { name, value } = e.target;

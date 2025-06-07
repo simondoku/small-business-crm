@@ -256,7 +256,10 @@ async function testControllerLevelSecurity() {
 
     // Verify it doesn't include Business 2's products - with null checks
     const hasUnauthorizedProducts = userProducts.some(
-      (p) => p.businessOwner && business1Id && p.businessOwner.toString() !== business1Id.toString()
+      (p) =>
+        p.businessOwner &&
+        business1Id &&
+        p.businessOwner.toString() !== business1Id.toString()
     );
 
     if (hasUnauthorizedProducts) {
