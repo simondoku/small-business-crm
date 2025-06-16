@@ -8,22 +8,39 @@
 // Force local development by default in development mode
 const isDevelopment = process.env.NODE_ENV === "development";
 
+// Get the backend API URL with environment variable support
+const getBackendUrl = () => {
+  if (isDevelopment) {
+    return process.env.REACT_APP_API_URL || "http://localhost:5003/api";
+  }
+
+  // Production: Use environment variable first, then fallback to current backend URL
+  return (
+    process.env.REACT_APP_API_URL ||
+    "https://businesscrm-oqyz6nbdi-simons-projects-94c78eac.vercel.app/api"
+  );
+};
+
 // API Configuration
 export const API_CONFIG = {
   // Use backend server running on port 5003
-  baseUrl: isDevelopment
-    ? "http://localhost:5003/api" // Local development backend
-    : "https://businesscrm-b749cv0rd-simons-projects-94c78eac.vercel.app/api", // Your deployed Express backend
+  baseUrl: getBackendUrl(),
   timeout: 30000,
   retryAttempts: 2,
 };
 
-// Log the configuration in development
+// Log the configuration in development and production for debugging
 if (isDevelopment) {
   console.log("Environment Configuration:", {
     mode: process.env.NODE_ENV,
     apiBaseUrl: API_CONFIG.baseUrl,
     publicUrl: process.env.PUBLIC_URL,
+    envApiUrl: process.env.REACT_APP_API_URL,
+  });
+} else {
+  console.log("Production API Configuration:", {
+    apiBaseUrl: API_CONFIG.baseUrl,
+    hasEnvOverride: !!process.env.REACT_APP_API_URL,
   });
 }
 

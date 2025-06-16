@@ -161,21 +161,10 @@ app.use((err, req, res, next) => {
   });
 });
 
-// For Vercel serverless deployment, export the app instead of listening
-if (NODE_ENV === "production") {
+// Start the server in all environments
+app.listen(PORT, "0.0.0.0", () => {
   console.log(
     "Payment features are disabled - focusing on core application features"
   );
-  console.log(`Server configured for ${NODE_ENV} mode`);
-  // Export the app for Vercel
-  module.exports = app;
-} else {
-  // Start server normally in development
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(
-      "Payment features are disabled - focusing on core application features"
-    );
-    console.log(`Server running in ${NODE_ENV} mode on port ${PORT}`);
-    console.log("MongoDB Connected: localhost");
-  });
-}
+  console.log(`Server running in ${NODE_ENV} mode on port ${PORT}`);
+});

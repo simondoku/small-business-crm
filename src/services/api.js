@@ -187,7 +187,7 @@ if (isVercelProduction) {
     return config;
   });
   
-  // Set more aggressive caching for Vercel's serverless functions
+  // Set appropriate caching headers for production
   api.defaults.headers.common['Cache-Control'] = 'public, max-age=30, stale-while-revalidate=300';
 }
 
