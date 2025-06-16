@@ -1,5 +1,5 @@
 // backend/config/db.js
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
@@ -16,24 +16,25 @@ const connectDB = async () => {
     });
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
-    
+
     // Handle connection events for better debugging
-    mongoose.connection.on('error', (err) => {
-      console.error('MongoDB connection error:', err);
+    mongoose.connection.on("error", (err) => {
+      console.error("MongoDB connection error:", err);
     });
-    
-    mongoose.connection.on('disconnected', () => {
-      console.log('MongoDB disconnected');
+
+    mongoose.connection.on("disconnected", () => {
+      console.log("MongoDB disconnected");
     });
-    
-    mongoose.connection.on('reconnected', () => {
-      console.log('MongoDB reconnected');
+
+    mongoose.connection.on("reconnected", () => {
+      console.log("MongoDB reconnected");
     });
-    
   } catch (error) {
     console.error(`MongoDB connection failed: ${error.message}`);
-    if (error.name === 'MongooseServerSelectionError') {
-      console.error('Server selection failed. Check your MongoDB Atlas cluster status and network access.');
+    if (error.name === "MongooseServerSelectionError") {
+      console.error(
+        "Server selection failed. Check your MongoDB Atlas cluster status and network access."
+      );
     }
     process.exit(1);
   }

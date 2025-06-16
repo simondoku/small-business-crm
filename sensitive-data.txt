@@ -1,1 +1,0 @@
-mongodb+srv://simondoku9:18QrS4i2zqifLmah@businesscrmcluster.q1qgljo.mongodb.net/
