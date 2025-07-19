@@ -1,0 +1,74 @@
+{
+  "name": "small-business-crm",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@headlessui/react": "^2.2.0",
+    "@heroicons/react": "^1.0.6",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.8.3",
+    "chart.js": "^4.4.8",
+    "concurrently": "^9.1.2",
+    "exceljs": "^4.4.0",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
+    "react": "^19.0.0",
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.5.2",
+    "react-scripts": "5.0.1",
+    "web-vitals": "^2.1.4",
+    "xlsx": "^0.18.5"
+  },
+  "scripts": {
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
+    "eject": "react-scripts eject",
+    "dev": "concurrently \"npm start\" \"cd backend && npm run dev\""
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@babel/plugin-transform-runtime": "^7.25.9",
+    "@tailwindcss/forms": "^0.5.10",
+    "autoprefixer": "^10.4.21",
+    "compression-webpack-plugin": "^11.1.0",
+    "customize-cra": "^1.0.0",
+    "postcss": "^8.5.3",
+    "react-app-rewired": "^2.2.1",
+    "tailwindcss": "^3.4.17",
+    "terser-webpack-plugin": "^5.3.10",
+    "webpack-bundle-analyzer": "^4.10.2"
+  },
+  "description": "A comprehensive Customer Relationship Management system for small businesses.",
+  "main": "config-overrides.js",
+  "keywords": [
+    "crm",
+    "business",
+    "sales",
+    "customers",
+    "react"
+  ],
+  "author": "",
+  "license": "ISC"
+}
