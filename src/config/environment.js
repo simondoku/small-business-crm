@@ -17,7 +17,7 @@ const getBackendUrl = () => {
   // Production: Use environment variable first, then fallback to current backend URL
   return (
     process.env.REACT_APP_API_URL ||
-    "https://businesscrm-oqyz6nbdi-simons-projects-94c78eac.vercel.app/api"
+    "https://jjylwu11-simons-projects-94c78eac.vercel.app/api"
   );
 };
 
