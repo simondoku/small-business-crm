@@ -52,7 +52,6 @@ export const FEATURES = {
 
 // Other environment settings
 export const ENV_SETTINGS = {
-  stripeKey: process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY,
   logLevel: process.env.REACT_APP_LOG_LEVEL || "info",
 };
 

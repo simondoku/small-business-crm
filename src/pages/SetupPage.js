@@ -14,21 +14,11 @@ const SetupPage = () => {
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [selectedPlan, setSelectedPlan] = useState('free'); // 'free' or 'premium'
     const [isFirstUser, setIsFirstUser] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
     const { user, register, initialized, hasAdmin, loading: authLoading } = useAuth();
-
-    // Check if coming from premium button
-    useEffect(() => {
-        const params = new URLSearchParams(location.search);
-        const plan = params.get('plan');
-        if (plan === 'premium') {
-            setSelectedPlan('premium');
-        }
-    }, [location]);
 
     // Check if this is the first user (for admin role)
     useEffect(() => {
@@ -83,12 +73,8 @@ const SetupPage = () => {
             });
 
             if (result.success) {
-                // Registration successful - direct to login or subscription based on selected plan
-                if (selectedPlan === 'premium') {
-                    navigate('/login?redirect=payments/subscription');
-                } else {
-                    navigate('/login');
-                }
+                // Registration successful - redirect to login
+                navigate('/login');
             } else {
                 setError(result.message);
             }
@@ -118,14 +104,6 @@ const SetupPage = () => {
                             ? "This will be the primary admin account for your CRM system"
                             : "Create your account to access the CRM system"}
                     </p>
-                    
-                    {selectedPlan === 'premium' && (
-                        <div className="mt-4 text-center">
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary/20 text-primary">
-                                Premium Plan Selected
-                            </span>
-                        </div>
-                    )}
                 </div>
 
                 {error && (
