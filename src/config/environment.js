@@ -11,13 +11,13 @@ const isDevelopment = process.env.NODE_ENV === "development";
 // Get the backend API URL with environment variable support
 const getBackendUrl = () => {
   if (isDevelopment) {
-    return process.env.REACT_APP_API_URL || "http://localhost:5003/api";
+    return process.env.REACT_APP_API_URL || "http://localhost:5000/api";
   }
 
-  // Production: Use environment variable first, then fallback to current backend URL
+  // Production: Use environment variable first, then fallback to deployed backend URL
   return (
     process.env.REACT_APP_API_URL ||
-    "https://jjylwu11-simons-projects-94c78eac.vercel.app/api"
+    "https://businesscrm-pjjylwu1i-simons-projects-94c78eac.vercel.app/api"
   );
 };
 
