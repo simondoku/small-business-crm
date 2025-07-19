@@ -23,7 +23,7 @@ const getBackendUrl = () => {
 
 // API Configuration
 export const API_CONFIG = {
-  // Use backend server running on port 5003
+  // Dynamic API URL based on environment
   baseUrl: getBackendUrl(),
   timeout: 30000,
   retryAttempts: 2,
