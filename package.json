@@ -26,7 +26,8 @@
   "scripts": {
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
-    "vercel-build": "react-app-rewired build",
+    "build-simple": "react-scripts build",
+    "vercel-build": "CI=false react-scripts build",
     "test": "react-app-rewired test",
     "eject": "react-scripts eject",
     "dev": "concurrently \"npm start\" \"cd backend && npm run dev\""
